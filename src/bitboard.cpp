@@ -8,8 +8,8 @@ namespace engine
 
     Bitboard pawnAttacks[2][64];
     Bitboard pseudoAttacks[7][64];
-    Bitboard diagonalAttacks[64][16384];
     Bitboard orthogonalAttacks[64][16384];
+    Bitboard diagonalAttacks[64][2048];
 
     namespace bitboard
     {
@@ -21,7 +21,7 @@ namespace engine
                 tileIndexes.push_back(popLsb(movementMask));
             }
 
-            int blockersCount = 1 << tileIndexes.size();
+            size_t blockersCount = 1 << tileIndexes.size();
             for (int blockerIndex = 0; blockerIndex < blockersCount; blockerIndex++)
             {
                 Bitboard blocker = 0;
@@ -99,6 +99,7 @@ namespace engine
                         pseudoAttacks[BISHOP][tile] |= tileBB(to);
                         to += dir;
                     }
+                    // don't consider last tile in each direction
                     pseudoAttacks[BISHOP][tile] &= ~tileBB(to - dir);
                 }
 
@@ -114,6 +115,7 @@ namespace engine
                         pseudoAttacks[ROOK][tile] |= tileBB(to);
                         to += dir;
                     }
+                    // don't consider last tile in each direction
                     pseudoAttacks[ROOK][tile] &= ~tileBB(to - dir);
                 }
 
@@ -132,7 +134,7 @@ namespace engine
                 for (const auto &blocker : blockers)
                 {
                     Bitboard attacks = getSlidingAttacks(tile, blocker, DIAGONAL);
-                    size_t lookupKey = (blocker * DIAGONAL_MAGIC_NUMBERS[tile]) >> DIAGONAL_SHIFTS[tile];
+                    unsigned lookupKey = (blocker * DIAGONAL_MAGIC_NUMBERS[tile]) >> DIAGONAL_SHIFTS[tile];
                     diagonalAttacks[tile][lookupKey] = attacks;
                 }
             }
@@ -145,12 +147,10 @@ namespace engine
                 for (const auto &blocker : blockers)
                 {
                     Bitboard attacks = getSlidingAttacks(tile, blocker, ORTHOGONAL);
-                    size_t lookupKey = (blocker * ORTHOGONAL_MAGIC_NUMBERS[tile]) >> ORTHOGONAL_SHIFTS[tile];
+                    unsigned lookupKey = (blocker * ORTHOGONAL_MAGIC_NUMBERS[tile]) >> ORTHOGONAL_SHIFTS[tile];
                     orthogonalAttacks[tile][lookupKey] = attacks;
                 }
             }
-
-            // todo free memory in magic tables
         }
 
         void print(Bitboard b)

@@ -148,7 +148,7 @@ namespace engine
         {
             Tile from = popLsb(pieces);
             Bitboard blockers = pos.getPieces() & pseudoAttacks[ROOK][from];
-            size_t lookupKey = (blockers * ORTHOGONAL_MAGIC_NUMBERS[from]) >> ORTHOGONAL_SHIFTS[from];
+            unsigned lookupKey = (blockers * ORTHOGONAL_MAGIC_NUMBERS[from]) >> ORTHOGONAL_SHIFTS[from];
             Bitboard attacks = orthogonalAttacks[from][lookupKey] & ~pos.getPieces(color);
             while (attacks != 0)
             {
@@ -167,7 +167,7 @@ namespace engine
         {
             Tile from = popLsb(pieces);
             Bitboard blockers = pos.getPieces() & pseudoAttacks[BISHOP][from];
-            size_t lookupKey = (blockers * DIAGONAL_MAGIC_NUMBERS[from]) >> DIAGONAL_SHIFTS[from];
+            unsigned lookupKey = (blockers * DIAGONAL_MAGIC_NUMBERS[from]) >> DIAGONAL_SHIFTS[from];
             Bitboard attacks = diagonalAttacks[from][lookupKey] & ~pos.getPieces(color);
             while (attacks != 0)
             {

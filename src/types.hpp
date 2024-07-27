@@ -1,6 +1,7 @@
 #ifndef TYPES
 #define TYPES
 
+#include <string>
 #include <cstdint>
 #include <cassert>
 
@@ -153,6 +154,11 @@ namespace engine
     {
         assert(isValid(tile));
         return Rank(tile >> 3);
+    }
+
+    inline std::string toString(Tile tile)
+    {
+        return (char)('a' + fileOf(tile)) + std::to_string(rankOf(tile) + 1);
     }
 
 #define ENABLE_INCR_OPERATORS_ON(T)                          \

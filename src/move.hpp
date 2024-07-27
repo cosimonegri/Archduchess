@@ -47,10 +47,7 @@ namespace engine
 
         friend std::ostream &operator<<(std::ostream &stream, const engine::Move &move)
         {
-            stream << (char)('a' + fileOf(move.getFrom()))
-                   << (rankOf(move.getFrom()) + 1)
-                   << (char)('a' + fileOf(move.getTo()))
-                   << (rankOf(move.getTo()) + 1);
+            stream << toString(move.getFrom()) << toString(move.getTo());
             return stream;
         };
     };

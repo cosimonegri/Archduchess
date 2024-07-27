@@ -15,7 +15,6 @@ namespace engine
 
         MoveList() : size{0} {};
 
-        bool contains(Move move);
         void clear();
     };
 

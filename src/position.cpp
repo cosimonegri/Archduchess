@@ -54,13 +54,13 @@ namespace engine
         // todo finish
     }
 
-    Piece Position::getPiece(Tile tile)
+    Piece Position::getPiece(Tile tile) const
     {
         assert(isValid(tile));
         return board[tile];
     }
 
-    Bitboard Position::getPieces(PieceType pt)
+    Bitboard Position::getPieces(PieceType pt) const
     {
         if (pt == NULL_TYPE)
         {
@@ -69,12 +69,12 @@ namespace engine
         return typeBB[pt - PAWN];
     }
 
-    Bitboard Position::getPieces(Color color)
+    Bitboard Position::getPieces(Color color) const
     {
         return colorBB[color];
     }
 
-    Bitboard Position::getPieces(Piece piece)
+    Bitboard Position::getPieces(Piece piece) const
     {
         if (piece == NULL_PIECE)
         {
@@ -83,22 +83,27 @@ namespace engine
         return typeBB[typeOf(piece)] & colorBB[colorOf(piece)];
     }
 
-    Bitboard Position::getPieces()
+    Bitboard Position::getPieces() const
     {
         return colorBB[WHITE] | colorBB[BLACK];
     }
 
-    Bitboard Position::getEmpty()
+    Bitboard Position::getEmpty() const
     {
         return ~getPieces();
     }
 
-    Color Position::getTurn()
+    Color Position::getTurn() const
     {
         return turn;
     }
 
-    Tile Position::getEnPassant()
+    bool Position::canCastle(CastlingRight c) const
+    {
+        return (castling & c) == c;
+    }
+
+    Tile Position::getEnPassant() const
     {
         return enPassant;
     }

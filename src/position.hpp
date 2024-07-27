@@ -110,15 +110,16 @@ namespace engine
     public:
         Position(const std::string &fen);
 
-        Piece getPiece(Tile tile);
-        Bitboard getPieces(PieceType pt);
-        Bitboard getPieces(Color color);
-        Bitboard getPieces(Piece piece);
-        Bitboard getPieces();
-        Bitboard getEmpty();
+        Piece getPiece(Tile tile) const;
+        Bitboard getPieces(PieceType pt) const;
+        Bitboard getPieces(Color color) const;
+        Bitboard getPieces(Piece piece) const;
+        Bitboard getPieces() const;
+        Bitboard getEmpty() const;
 
-        Color getTurn();
-        Tile getEnPassant();
+        Color getTurn() const;
+        bool canCastle(CastlingRight c) const;
+        Tile getEnPassant() const;
 
         void makeTurn(Move move);
         void unmakeTurn();

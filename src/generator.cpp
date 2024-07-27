@@ -3,19 +3,6 @@
 
 namespace engine
 {
-    // todo see if this works and if is needed
-    bool MoveList::contains(Move move)
-    {
-        for (int i = 0; i < size; i++)
-        {
-            if (moves[i] == move)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     void MoveList::clear()
     {
         size = 0;
@@ -29,7 +16,7 @@ namespace engine
         moveList.moves[moveList.size++] = Move(from, to, isCapture ? KNIGHT_PROM_CAPTURE : KNIGHT_PROM);
     }
 
-    void generatePseudoPawnMoves(Position &pos, MoveList &moveList)
+    void generatePseudoPawnMoves(const Position &pos, MoveList &moveList)
     {
         Color color = pos.getTurn();
         Bitboard pawns = pos.getPieces(makePiece(PAWN, color));
@@ -105,41 +92,7 @@ namespace engine
         }
     }
 
-    void generatePseudoKnightMoves(Position &pos, MoveList &moveList)
-    {
-        Color color = pos.getTurn();
-        Bitboard knights = pos.getPieces(makePiece(KNIGHT, color));
-
-        while (knights != 0)
-        {
-            Tile from = popLsb(knights);
-            Bitboard attacks = pseudoAttacks[KNIGHT][from] & ~pos.getPieces(color);
-            while (attacks != 0)
-            {
-                Tile to = popLsb(attacks);
-                moveList.moves[moveList.size++] = Move(from, to);
-            }
-        }
-    }
-
-    void generatePseudoKingMoves(Position &pos, MoveList &moveList)
-    {
-        Color color = pos.getTurn();
-        Bitboard king = pos.getPieces(makePiece(KING, color));
-
-        while (king != 0)
-        {
-            Tile from = popLsb(king);
-            Bitboard attacks = pseudoAttacks[KING][from] & ~pos.getPieces(color);
-            while (attacks != 0)
-            {
-                Tile to = popLsb(attacks);
-                moveList.moves[moveList.size++] = Move(from, to);
-            }
-        }
-    }
-
-    void generatePseudoOrthogonalMoves(Position &pos, MoveList &moveList, PieceType pt)
+    void generatePseudoMoves(PieceType pt, const Position &pos, MoveList &moveList)
     {
         Color color = pos.getTurn();
         Bitboard pieces = pos.getPieces(makePiece(pt, color));
@@ -147,9 +100,7 @@ namespace engine
         while (pieces != 0)
         {
             Tile from = popLsb(pieces);
-            Bitboard blockers = pos.getPieces() & pseudoAttacks[ROOK][from];
-            unsigned lookupKey = (blockers * ORTHOGONAL_MAGIC_NUMBERS[from]) >> ORTHOGONAL_SHIFTS[from];
-            Bitboard attacks = orthogonalAttacks[from][lookupKey] & ~pos.getPieces(color);
+            Bitboard attacks = getAttacksBB(pt, from, pos.getPieces()) & ~pos.getPieces(color);
             while (attacks != 0)
             {
                 Tile to = popLsb(attacks);
@@ -158,34 +109,14 @@ namespace engine
         }
     }
 
-    void generatePseudoDiagonalMoves(Position &pos, MoveList &moveList, PieceType pt)
-    {
-        Color color = pos.getTurn();
-        Bitboard pieces = pos.getPieces(makePiece(pt, color));
-
-        while (pieces != 0)
-        {
-            Tile from = popLsb(pieces);
-            Bitboard blockers = pos.getPieces() & pseudoAttacks[BISHOP][from];
-            unsigned lookupKey = (blockers * DIAGONAL_MAGIC_NUMBERS[from]) >> DIAGONAL_SHIFTS[from];
-            Bitboard attacks = diagonalAttacks[from][lookupKey] & ~pos.getPieces(color);
-            while (attacks != 0)
-            {
-                Tile to = popLsb(attacks);
-                moveList.moves[moveList.size++] = Move(from, to);
-            }
-        }
-    }
-
-    void generatePseudoMoves(Position &pos, MoveList &moveList)
+    void generatePseudoMoves(const Position &pos, MoveList &moveList)
     {
         generatePseudoPawnMoves(pos, moveList);
-        generatePseudoKnightMoves(pos, moveList);
-        generatePseudoDiagonalMoves(pos, moveList, BISHOP);
-        generatePseudoOrthogonalMoves(pos, moveList, ROOK);
-        generatePseudoDiagonalMoves(pos, moveList, QUEEN);
-        generatePseudoOrthogonalMoves(pos, moveList, QUEEN);
-        generatePseudoKingMoves(pos, moveList);
+        generatePseudoMoves(KNIGHT, pos, moveList);
+        generatePseudoMoves(BISHOP, pos, moveList);
+        generatePseudoMoves(ROOK, pos, moveList);
+        generatePseudoMoves(QUEEN, pos, moveList);
+        generatePseudoMoves(KING, pos, moveList);
     }
 
     void generateMoves(Position &pos, MoveList &moveList)

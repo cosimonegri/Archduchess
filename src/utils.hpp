@@ -16,10 +16,10 @@ namespace utils
 {
     void generateMagics()
     {
-        Bitboard orthogonalMagics[64];
-        unsigned orthogonalShifts[64];
-        Bitboard diagonalMagics[64];
-        unsigned diagonalShifts[64];
+        Bitboard rookMagics[64];
+        unsigned rookShifts[64];
+        Bitboard bishopMagics[64];
+        unsigned bishopShifts[64];
 
         std::string number;
         std::ifstream inputFile("magics.txt");
@@ -28,22 +28,22 @@ namespace utils
             for (int i = 0; i < 64; i++)
             {
                 std::getline(inputFile, number, ',');
-                orthogonalMagics[i] = std::stoull(number);
+                rookMagics[i] = std::stoull(number);
             }
             for (int i = 0; i < 64; i++)
             {
                 std::getline(inputFile, number, ',');
-                orthogonalShifts[i] = std::stoi(number);
+                rookShifts[i] = std::stoi(number);
             }
             for (int i = 0; i < 64; i++)
             {
                 std::getline(inputFile, number, ',');
-                diagonalMagics[i] = std::stoull(number);
+                bishopMagics[i] = std::stoull(number);
             }
             for (int i = 0; i < 64; i++)
             {
                 std::getline(inputFile, number, ',');
-                diagonalShifts[i] = std::stoi(number);
+                bishopShifts[i] = std::stoi(number);
             }
             inputFile.close();
         }
@@ -51,10 +51,10 @@ namespace utils
         {
             for (int i = 0; i < 64; i++)
             {
-                orthogonalMagics[i] = 0;
-                orthogonalShifts[i] = 0;
-                diagonalMagics[i] = 0;
-                diagonalShifts[i] = 0;
+                rookMagics[i] = 0;
+                rookShifts[i] = 0;
+                bishopMagics[i] = 0;
+                bishopShifts[i] = 0;
             }
         }
 
@@ -75,8 +75,8 @@ namespace utils
             {
                 blockers.clear();
                 bitboard::generateBlockers(pseudoAttacks[pt][tile], blockers);
-                Bitboard *magics = pt == ROOK ? orthogonalMagics : diagonalMagics;
-                unsigned *shifts = pt == ROOK ? orthogonalShifts : diagonalShifts;
+                Bitboard *magics = pt == ROOK ? rookMagics : bishopMagics;
+                unsigned *shifts = pt == ROOK ? rookShifts : bishopShifts;
 
                 for (int i = 0; i < 10000; i++)
                 {
@@ -125,41 +125,41 @@ namespace utils
         }
 
         std::cout
-            << "Best orthogonal bits count: "
-            << (64 - *std::max_element(orthogonalShifts, orthogonalShifts + 64))
+            << "Best rook bits count: "
+            << (64 - *std::max_element(rookShifts, rookShifts + 64))
             << std::endl;
         std::cout
-            << "Worst orthogonal bits count: "
-            << (64 - *std::min_element(orthogonalShifts, orthogonalShifts + 64))
+            << "Worst rook bits count: "
+            << (64 - *std::min_element(rookShifts, rookShifts + 64))
             << std::endl;
         std::cout
-            << "Best diagonal bits count: "
-            << (64 - *std::max_element(diagonalShifts, diagonalShifts + 64))
+            << "Best bishop bits count: "
+            << (64 - *std::max_element(bishopShifts, bishopShifts + 64))
             << std::endl;
         std::cout
-            << "Worst diagonal bits count: "
-            << (64 - *std::min_element(diagonalShifts, diagonalShifts + 64))
+            << "Worst bishop bits count: "
+            << (64 - *std::min_element(bishopShifts, bishopShifts + 64))
             << std::endl;
 
         std::ofstream outputFile("magics.txt");
         for (int i = 0; i < 64; i++)
         {
-            outputFile << orthogonalMagics[i] << ",";
+            outputFile << rookMagics[i] << ",";
         }
         outputFile << std::endl;
         for (int i = 0; i < 64; i++)
         {
-            outputFile << orthogonalShifts[i] << ",";
+            outputFile << rookShifts[i] << ",";
         }
         outputFile << std::endl;
         for (int i = 0; i < 64; i++)
         {
-            outputFile << diagonalMagics[i] << ",";
+            outputFile << bishopMagics[i] << ",";
         }
         outputFile << std::endl;
         for (int i = 0; i < 64; i++)
         {
-            outputFile << diagonalShifts[i] << ",";
+            outputFile << bishopShifts[i] << ",";
         }
         outputFile << std::endl;
         outputFile.close();

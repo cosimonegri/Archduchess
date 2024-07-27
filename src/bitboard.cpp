@@ -4,12 +4,13 @@
 
 namespace engine
 {
+    // todo Bitboard betweenBB[64][64];
     int manhattanDistance[64][64];
 
     Bitboard pawnAttacks[2][64];
     Bitboard pseudoAttacks[7][64];
-    Bitboard orthogonalAttacks[64][16384];
-    Bitboard diagonalAttacks[64][2048];
+    Bitboard rookMagics[64][16384];
+    Bitboard bishopMagics[64][2048];
 
     namespace bitboard
     {
@@ -56,6 +57,28 @@ namespace engine
                 }
             }
             return attacks;
+        }
+
+        void generateMagicTables()
+        {
+            std::vector<Bitboard> blockers;
+            for (Tile tile = A1; tile <= H8; ++tile)
+            {
+                generateBlockers(pseudoAttacks[ROOK][tile], blockers);
+                for (const auto &blocker : blockers)
+                {
+                    Bitboard attacks = getSlidingAttacks(tile, blocker, ORTHOGONAL);
+                    rookMagics[tile][rookMagicKey(tile, blocker)] = attacks;
+                }
+                blockers.clear();
+                generateBlockers(pseudoAttacks[BISHOP][tile], blockers);
+                for (const auto &blocker : blockers)
+                {
+                    Bitboard attacks = getSlidingAttacks(tile, blocker, DIAGONAL);
+                    bishopMagics[tile][bishopMagicKey(tile, blocker)] = attacks;
+                }
+                blockers.clear();
+            }
         }
 
         void init()
@@ -126,31 +149,7 @@ namespace engine
                 }
             }
 
-            // generate diagonal magic table
-            for (Tile tile = A1; tile <= H8; ++tile)
-            {
-                std::vector<Bitboard> blockers;
-                generateBlockers(pseudoAttacks[BISHOP][tile], blockers);
-                for (const auto &blocker : blockers)
-                {
-                    Bitboard attacks = getSlidingAttacks(tile, blocker, DIAGONAL);
-                    unsigned lookupKey = (blocker * DIAGONAL_MAGIC_NUMBERS[tile]) >> DIAGONAL_SHIFTS[tile];
-                    diagonalAttacks[tile][lookupKey] = attacks;
-                }
-            }
-
-            // generate orthogonal magic table
-            for (Tile tile = A1; tile <= H8; ++tile)
-            {
-                std::vector<Bitboard> blockers;
-                generateBlockers(pseudoAttacks[ROOK][tile], blockers);
-                for (const auto &blocker : blockers)
-                {
-                    Bitboard attacks = getSlidingAttacks(tile, blocker, ORTHOGONAL);
-                    unsigned lookupKey = (blocker * ORTHOGONAL_MAGIC_NUMBERS[tile]) >> ORTHOGONAL_SHIFTS[tile];
-                    orthogonalAttacks[tile][lookupKey] = attacks;
-                }
-            }
+            generateMagicTables();
         }
 
         void print(Bitboard b)

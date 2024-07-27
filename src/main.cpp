@@ -10,6 +10,8 @@
 
 static const char DELIMITER = ' ';
 static const std::string TEST_COMMAND = "test";
+static const std::string POSITION_COMMAND = "position";
+static const std::string PRINT_COMMAND = "print";
 static const std::string PERFT_COMMAND = "perft";
 
 void runPerftTest();
@@ -17,6 +19,7 @@ void runPerftTest();
 int main()
 {
     engine::bitboard::init();
+    engine::Position chessPos(engine::STARTING_FEN);
 
     std::string input;
     std::vector<std::string> tokens;
@@ -35,24 +38,40 @@ int main()
         tokens.push_back(input);
 
         if (tokens.size() == 0)
-        {
             continue;
-        }
 
         if (tokens[0].compare(TEST_COMMAND) == 0)
         {
             runPerftTest();
         }
+
+        else if (tokens[0].compare(POSITION_COMMAND) == 0)
+        {
+            if (tokens.size() < 2)
+                continue;
+            std::string fen;
+            for (int i = 1; i < tokens.size(); i++)
+            {
+                if (i != 1)
+                    fen += DELIMITER;
+                fen += tokens[i];
+            }
+            chessPos = engine::Position(fen);
+        }
+
+        else if (tokens[0].compare(PRINT_COMMAND) == 0)
+        {
+            chessPos.print();
+        }
+
         else if (tokens[0].compare(PERFT_COMMAND) == 0)
         {
-            if (tokens.size() >= 2)
-            {
-                engine::Position chessPos(engine::STARTING_FEN);
-                std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-                engine::perft(chessPos, std::stoi(tokens[1]));
-                std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-                std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
-            }
+            if (tokens.size() < 2)
+                continue;
+            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+            engine::perft(chessPos, std::stoi(tokens[1]));
+            std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+            std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
         }
     }
     return 0;

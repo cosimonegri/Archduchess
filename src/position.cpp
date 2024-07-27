@@ -42,7 +42,7 @@ namespace engine
         while (index < fen.length())
         {
             char c = fen.at(index);
-            if (c == FEN_DELIMITER)
+            if (c == FEN_DELIMITER || c == FEN_EMPTY)
             {
                 index++;
                 break;

@@ -32,7 +32,7 @@ namespace engine
     constexpr Bitboard rank7 = rank1 << 48;
     constexpr Bitboard rank8 = rank1 << 56;
 
-    // todo extern Bitboard betweenBB[64][64];
+    extern Bitboard betweenBB[64][64];
     extern int manhattanDistance[64][64];
 
     extern Bitboard pawnAttacks[2][64];
@@ -97,6 +97,12 @@ namespace engine
                : dir == DOWN_RIGHT ? (b & ~fileH) >> 7
                : dir == DOWN_LEFT  ? (b & ~fileA) >> 9
                                    : 0;
+    }
+
+    inline Bitboard getBetweenBB(Tile tileA, Tile tileB)
+    {
+        assert(isValid(tileA) && isValid(tileB));
+        return betweenBB[tileA][tileB];
     }
 
     inline Bitboard getAttacksBB(PieceType pt, Tile from, Bitboard occupied = 0ULL)

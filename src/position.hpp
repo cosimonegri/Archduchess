@@ -118,8 +118,12 @@ namespace engine
         Bitboard getEmpty() const;
 
         Color getTurn() const;
-        bool canCastle(CastlingRight c) const;
         Tile getEnPassant() const;
+
+        bool hasCastlingRight(CastlingRight c) const;
+        bool castlingPathFree(CastlingRight c) const;
+        Bitboard getCastlingKingPath(CastlingRight c) const;
+        Tile getCastlingKingTo(CastlingRight c) const;
 
         void makeTurn(Move move);
         void unmakeTurn();

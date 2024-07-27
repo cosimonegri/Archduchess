@@ -4,7 +4,7 @@
 
 namespace engine
 {
-    // todo Bitboard betweenBB[64][64];
+    Bitboard betweenBB[64][64];
     int manhattanDistance[64][64];
 
     Bitboard pawnAttacks[2][64];
@@ -18,13 +18,9 @@ namespace engine
     void bitboard::init()
     {
         for (Tile tileA = A1; tileA <= H8; ++tileA)
-        {
             for (Tile tileB = A1; tileB <= H8; ++tileB)
-            {
                 manhattanDistance[tileA][tileB] =
                     abs(fileOf(tileA) - fileOf(tileB)) + abs(rankOf(tileA) - rankOf(tileB));
-            }
-        }
 
         for (Tile tile = A1; tile <= H8; ++tile)
         {
@@ -46,9 +42,7 @@ namespace engine
 
             // generate king attack mask
             for (Direction dir : {UP, DOWN, RIGHT, LEFT, UP_RIGHT, UP_LEFT, DOWN_RIGHT, DOWN_LEFT})
-            {
                 pseudoAttacks[KING][tile] |= shiftBB(tileBB(tile), dir);
-            }
 
             // generate rook attack mask
             for (Direction dir : {UP, DOWN, RIGHT, LEFT})
@@ -84,6 +78,34 @@ namespace engine
         }
 
         initMagicTables();
+
+        for (Tile tileA = A1; tileA <= H8; ++tileA)
+            for (Tile tileB = A1; tileB <= H8; ++tileB)
+            {
+                if (tileA == tileB)
+                {
+                    betweenBB[tileA][tileB] = 0;
+                }
+                else if (fileOf(tileA) == fileOf(tileB) || rankOf(tileA) == rankOf(tileB))
+                {
+                    betweenBB[tileA][tileB] =
+                        getAttacksBB(ROOK, tileA, tileBB(tileB)) &
+                        getAttacksBB(ROOK, tileB, tileBB(tileA));
+                    betweenBB[tileA][tileB] |= tileBB(tileB);
+                }
+                else if (((int)fileOf(tileA) - (int)rankOf(tileA) == (int)fileOf(tileB) - (int)rankOf(tileB)) ||
+                         ((int)fileOf(tileA) + (int)rankOf(tileA) == (int)fileOf(tileB) + (int)rankOf(tileB)))
+                {
+                    betweenBB[tileA][tileB] =
+                        getAttacksBB(BISHOP, tileA, tileBB(tileB)) &
+                        getAttacksBB(BISHOP, tileB, tileBB(tileA));
+                    betweenBB[tileA][tileB] |= tileBB(tileB);
+                }
+                else
+                {
+                    betweenBB[tileA][tileB] = 0;
+                }
+            }
     }
 
     void bitboard::print(Bitboard b)

@@ -98,14 +98,42 @@ namespace engine
         return turn;
     }
 
-    bool Position::canCastle(CastlingRight c) const
+    Tile Position::getEnPassant() const
+    {
+        return enPassant;
+    }
+
+    bool Position::hasCastlingRight(CastlingRight c) const
     {
         return (castling & c) == c;
     }
 
-    Tile Position::getEnPassant() const
+    bool Position::castlingPathFree(CastlingRight c) const
     {
-        return enPassant;
+        Bitboard castlingPath = c == W_KING_SIDE    ? getBetweenBB(E1, G1)
+                                : c == W_QUEEN_SIDE ? getBetweenBB(E1, B1)
+                                : c == B_KING_SIDE  ? getBetweenBB(E8, G8)
+                                : c == B_QUEEN_SIDE ? getBetweenBB(E8, B8)
+                                                    : 0;
+        return (castlingPath & getPieces()) == 0;
+    }
+
+    Bitboard Position::getCastlingKingPath(CastlingRight c) const
+    {
+        return c == W_KING_SIDE    ? getBetweenBB(H1, E1)
+               : c == W_QUEEN_SIDE ? getBetweenBB(B1, E1)
+               : c == B_KING_SIDE  ? getBetweenBB(H8, E8)
+               : c == B_QUEEN_SIDE ? getBetweenBB(B8, E8)
+                                   : 0;
+    }
+
+    Tile Position::getCastlingKingTo(CastlingRight c) const
+    {
+        return c == W_KING_SIDE    ? G1
+               : c == W_QUEEN_SIDE ? C1
+               : c == B_KING_SIDE  ? G8
+               : c == B_QUEEN_SIDE ? C8
+                                   : NULL_TILE;
     }
 
     void Position::makeTurn(Move move)

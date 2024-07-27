@@ -109,6 +109,29 @@ namespace engine
         }
     }
 
+    void generatePseudoKingMoves(const Position &pos, MoveList &moveList)
+    {
+        Color color = pos.getTurn();
+        Bitboard king = pos.getPieces(makePiece(KING, color));
+        Tile from = popLsb(king);
+        Bitboard attacks = getAttacksBB(KING, from, pos.getPieces()) & ~pos.getPieces(color);
+        while (attacks != 0)
+        {
+            Tile to = popLsb(attacks);
+            moveList.moves[moveList.size++] = Move(from, to);
+        }
+        CastlingRight kingSide = color == WHITE ? W_KING_SIDE : B_KING_SIDE;
+        CastlingRight queenSide = color == WHITE ? W_QUEEN_SIDE : B_QUEEN_SIDE;
+        if (pos.hasCastlingRight(kingSide) && pos.castlingPathFree(kingSide))
+        {
+            moveList.moves[moveList.size++] = Move(from, pos.getCastlingKingTo(kingSide), KING_CASTLE);
+        }
+        if (pos.hasCastlingRight(queenSide) && pos.castlingPathFree(queenSide))
+        {
+            moveList.moves[moveList.size++] = Move(from, pos.getCastlingKingTo(queenSide), QUEEN_CASTLE);
+        }
+    }
+
     void generatePseudoMoves(const Position &pos, MoveList &moveList)
     {
         generatePseudoPawnMoves(pos, moveList);
@@ -116,7 +139,7 @@ namespace engine
         generatePseudoMoves(BISHOP, pos, moveList);
         generatePseudoMoves(ROOK, pos, moveList);
         generatePseudoMoves(QUEEN, pos, moveList);
-        generatePseudoMoves(KING, pos, moveList);
+        generatePseudoKingMoves(pos, moveList);
     }
 
     void generateMoves(Position &pos, MoveList &moveList)
@@ -129,6 +152,18 @@ namespace engine
         {
             pos.makeTurn(pseudoMoves.moves[i]);
             Bitboard king = pos.getPieces(makePiece(KING, color));
+
+            if (pseudoMoves.moves[i].getFlag() == KING_CASTLE)
+            {
+                CastlingRight kingSide = color == WHITE ? W_KING_SIDE : B_KING_SIDE;
+                king |= pos.getCastlingKingPath(kingSide);
+            }
+            else if (pseudoMoves.moves[i].getFlag() == QUEEN_CASTLE)
+            {
+                CastlingRight queenSide = color == WHITE ? W_QUEEN_SIDE : B_QUEEN_SIDE;
+                king |= pos.getCastlingKingPath(queenSide);
+            }
+
             generatePseudoMoves(pos, opponentMoves);
 
             bool legal = true;

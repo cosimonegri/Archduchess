@@ -9,9 +9,9 @@ namespace engine
 {
     namespace bitboard
     {
-        void generateBlockers(Bitboard movementMask, std::vector<Bitboard> &blockers);
         void init();
         void print(Bitboard b);
+        void generateBlockers(Bitboard movementMask, std::vector<Bitboard> &blockers);
     }
 
     constexpr Bitboard fileA = 0x0101010101010101ULL;

@@ -87,7 +87,7 @@ namespace engine
             while (attackers)
             {
                 Tile from = popLsb(attackers);
-                moveList.moves[moveList.size++] = Move(from, pos.getEnPassant(), CAPTURE);
+                moveList.moves[moveList.size++] = Move(from, pos.getEnPassant(), EN_PASSANT);
             }
         }
     }
@@ -145,7 +145,7 @@ namespace engine
     void generateMoves(Position &pos, MoveList &moveList)
     {
         Color color = pos.getTurn();
-        MoveList pseudoMoves, opponentMoves;
+        MoveList pseudoMoves;
         generatePseudoMoves(pos, pseudoMoves);
 
         for (int i = 0; i < pseudoMoves.size; i++)
@@ -164,23 +164,10 @@ namespace engine
                 king |= pos.getCastlingKingPath(queenSide);
             }
 
-            generatePseudoMoves(pos, opponentMoves);
-
-            bool legal = true;
-            for (int j = 0; j < opponentMoves.size; j++)
-            {
-                if ((tileBB(opponentMoves.moves[j].getTo()) & king) != 0)
-                {
-                    legal = false;
-                    break;
-                }
-            }
-
-            if (legal)
+            if ((pos.getAttacksBB(~color) & king) == 0)
             {
                 moveList.moves[moveList.size++] = pseudoMoves.moves[i];
             }
-            opponentMoves.clear();
             pos.unmakeTurn();
         }
     }

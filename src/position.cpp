@@ -51,6 +51,17 @@ namespace engine
             index++;
         }
 
+        char c = fen.at(index);
+        index++;
+        if (c != FEN_EMPTY)
+        {
+            char fileChar = c;
+            char rankChar = fen.at(index);
+            index++;
+            enPassant = makeTile(File(fileChar - 'a'), Rank(rankChar - '1'));
+        }
+        index++;
+
         // todo finish
     }
 
@@ -134,6 +145,28 @@ namespace engine
                : c == B_KING_SIDE  ? G8
                : c == B_QUEEN_SIDE ? C8
                                    : NULL_TILE;
+    }
+
+    Bitboard Position::getAttacksBB(Color color) const
+    {
+        Bitboard attacks = 0;
+
+        Bitboard pawns = getPieces(makePiece(PAWN, color));
+        Direction diagRight = color == WHITE ? UP_RIGHT : DOWN_RIGHT;
+        Direction diagLeft = color == WHITE ? UP_LEFT : DOWN_LEFT;
+        attacks |= shiftBB(pawns, diagRight);
+        attacks |= shiftBB(pawns, diagLeft);
+
+        for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
+        {
+            Bitboard pieces = getPieces(makePiece(pt, color));
+            while (pieces != 0)
+            {
+                Tile from = popLsb(pieces);
+                attacks |= engine::getAttacksBB(pt, from, getPieces()) & ~getPieces(color);
+            }
+        }
+        return attacks;
     }
 
     void Position::makeTurn(Move move)
@@ -309,9 +342,7 @@ namespace engine
     void Position::init()
     {
         for (Tile tile = A1; tile <= H8; ++tile)
-        {
             board[tile] = NULL_PIECE;
-        }
     }
 
     void Position::setPiece(Tile tile, Piece piece)

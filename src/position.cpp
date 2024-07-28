@@ -42,7 +42,12 @@ namespace engine
         while (index < fen.length())
         {
             char c = fen.at(index);
-            if (c == FEN_DELIMITER || c == FEN_EMPTY)
+            if (c == FEN_EMPTY)
+            {
+                index += 2;
+                break;
+            }
+            if (c == FEN_DELIMITER)
             {
                 index++;
                 break;
@@ -59,6 +64,7 @@ namespace engine
             char rankChar = fen.at(index);
             index++;
             enPassant = makeTile(File(fileChar - 'a'), Rank(rankChar - '1'));
+            std::cout << toString(enPassant) << std::endl;
         }
         index++;
 

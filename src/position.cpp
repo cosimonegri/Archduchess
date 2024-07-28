@@ -9,7 +9,7 @@ namespace engine
           castling(NULL_CASTLING), enPassant(NULL_TILE)
     {
         init();
-        int index = 0;
+        size_t index = 0;
         int tile = A8;
         while (index < fen.length())
         {

@@ -152,7 +152,7 @@ namespace engine
         MoveList pseudoMoves;
         generatePseudoMoves(pos, pseudoMoves);
 
-        for (int i = 0; i < pseudoMoves.size; i++)
+        for (size_t i = 0; i < pseudoMoves.size; i++)
         {
             pos.makeTurn(pseudoMoves.moves[i]);
             Bitboard king = pos.getPieces(makePiece(KING, color));

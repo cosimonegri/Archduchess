@@ -142,10 +142,10 @@ namespace engine
         }
 
         size_t blockersCount = 1 << tileIndexes.size();
-        for (int blockerIndex = 0; blockerIndex < blockersCount; blockerIndex++)
+        for (size_t blockerIndex = 0; blockerIndex < blockersCount; blockerIndex++)
         {
             Bitboard blocker = 0;
-            for (int i = 0; i < tileIndexes.size(); i++)
+            for (size_t i = 0; i < tileIndexes.size(); i++)
             {
                 Bitboard bit = ((Bitboard)blockerIndex >> i) & 1;
                 blocker |= (bit << tileIndexes[i]);

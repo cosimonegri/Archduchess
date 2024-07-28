@@ -53,7 +53,7 @@ int main()
             if (tokens.size() < 2)
                 continue;
             string fen;
-            for (int i = 1; i < tokens.size(); i++)
+            for (size_t i = 1; i < tokens.size(); i++)
             {
                 if (i != 1)
                     fen += DELIMITER;

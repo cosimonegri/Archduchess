@@ -188,6 +188,16 @@ namespace engine
         return color == WHITE ? UP : DOWN;
     }
 
+    constexpr Direction getPawnRightDir(Color color)
+    {
+        return color == WHITE ? UP_RIGHT : DOWN_RIGHT;
+    }
+
+    constexpr Direction getPawnLeftDir(Color color)
+    {
+        return color == WHITE ? UP_LEFT : DOWN_LEFT;
+    }
+
     // these operations might return something that is not a valid tile
     inline Tile operator+(Tile tile, Direction dir)
     {

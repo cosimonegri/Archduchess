@@ -153,26 +153,32 @@ namespace engine
                                    : NULL_TILE;
     }
 
-    Bitboard Position::getAttacksBB(Color color) const
+    template <Color C>
+    Bitboard Position::getAttacksBB() const
     {
-        Bitboard attacks = 0;
+        constexpr Direction diagRight = getPawnRightDir(C);
+        constexpr Direction diagLeft = getPawnLeftDir(C);
 
-        Bitboard pawns = getPieces(makePiece(PAWN, color));
-        Direction diagRight = color == WHITE ? UP_RIGHT : DOWN_RIGHT;
-        Direction diagLeft = color == WHITE ? UP_LEFT : DOWN_LEFT;
-        attacks |= shiftBB(pawns, diagRight);
-        attacks |= shiftBB(pawns, diagLeft);
+        Bitboard pawns = getPieces(makePiece(PAWN, C));
+        Bitboard attacks = 0;
+        attacks |= shiftBB<diagRight>(pawns);
+        attacks |= shiftBB<diagLeft>(pawns);
 
         for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
-            Bitboard pieces = getPieces(makePiece(pt, color));
+            Bitboard pieces = getPieces(makePiece(pt, C));
             while (pieces != 0)
             {
                 Tile from = popLsb(pieces);
-                attacks |= engine::getAttacksBB(pt, from, getPieces()) & ~getPieces(color);
+                attacks |= engine::getAttacksBB(pt, from, getPieces()) & ~getPieces(C);
             }
         }
         return attacks;
+    }
+
+    Bitboard Position::getAttacksBB(Color color) const
+    {
+        return color == WHITE ? getAttacksBB<WHITE>() : getAttacksBB<BLACK>();
     }
 
     void Position::makeTurn(Move move, RevertState &newState)

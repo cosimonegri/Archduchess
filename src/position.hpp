@@ -124,6 +124,8 @@ namespace engine
         Bitboard getCastlingKingPath(CastlingRight c) const;
         Tile getCastlingKingTo(CastlingRight c) const;
 
+        template <Color C>
+        Bitboard getAttacksBB() const;
         Bitboard getAttacksBB(Color color) const;
 
         void makeTurn(Move move, RevertState &newState);

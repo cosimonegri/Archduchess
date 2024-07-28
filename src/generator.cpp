@@ -16,25 +16,26 @@ namespace engine
         moveList.moves[moveList.size++] = Move(from, to, isCapture ? KNIGHT_PROM_CAPTURE : KNIGHT_PROM);
     }
 
+    template <Color C>
     void generatePseudoPawnMoves(const Position &pos, MoveList &moveList)
     {
-        Color color = pos.getTurn();
-        Bitboard pawns = pos.getPieces(makePiece(PAWN, color));
+        constexpr Color enemyColor = ~C;
+        constexpr Direction pushDir = getPawnPushDir(C);
+        constexpr Direction diagRight = getPawnRightDir(C);
+        constexpr Direction diagLeft = getPawnLeftDir(C);
+        constexpr Bitboard doubleRank = C == WHITE ? rank3 : rank6;
+        constexpr Bitboard finalRank = C == WHITE ? rank7 : rank2;
+
+        Bitboard pawns = pos.getPieces(makePiece(PAWN, C));
         Bitboard empty = pos.getEmpty();
-        Bitboard enemies = pos.getPieces(~color);
+        Bitboard enemies = pos.getPieces(enemyColor);
 
-        Direction pushDir = color == WHITE ? UP : DOWN;
-        Direction diagRight = color == WHITE ? UP_RIGHT : DOWN_RIGHT;
-        Direction diagLeft = color == WHITE ? UP_LEFT : DOWN_LEFT;
-
-        Bitboard doubleRank = color == WHITE ? rank3 : rank6;
-        Bitboard finalRank = color == WHITE ? rank7 : rank2;
         Bitboard promPawns = pawns & finalRank;
         Bitboard nonPromPawns = pawns & ~finalRank;
 
         // single and double pushes (without promotions)
-        Bitboard pushes = shiftBB(nonPromPawns, pushDir) & empty;
-        Bitboard doublePushes = shiftBB(pushes & doubleRank, pushDir) & empty;
+        Bitboard pushes = shiftBB<pushDir>(nonPromPawns) & empty;
+        Bitboard doublePushes = shiftBB<pushDir>(pushes & doubleRank) & empty;
         while (pushes)
         {
             Tile to = popLsb(pushes);
@@ -47,8 +48,8 @@ namespace engine
         }
 
         // attacks (without promotions)
-        Bitboard attacksRight = shiftBB(nonPromPawns, diagRight) & enemies;
-        Bitboard attacksLeft = shiftBB(nonPromPawns, diagLeft) & enemies;
+        Bitboard attacksRight = shiftBB<diagRight>(nonPromPawns) & enemies;
+        Bitboard attacksLeft = shiftBB<diagLeft>(nonPromPawns) & enemies;
         while (attacksRight)
         {
             Tile to = popLsb(attacksRight);
@@ -61,9 +62,9 @@ namespace engine
         }
 
         // promotions
-        Bitboard promPushes = shiftBB(promPawns, pushDir) & empty;
-        Bitboard promAttacksRight = shiftBB(promPawns, diagRight) & enemies;
-        Bitboard promAttacksLeft = shiftBB(promPawns, diagLeft) & enemies;
+        Bitboard promPushes = shiftBB<pushDir>(promPawns) & empty;
+        Bitboard promAttacksRight = shiftBB<diagRight>(promPawns) & enemies;
+        Bitboard promAttacksLeft = shiftBB<diagLeft>(promPawns) & enemies;
         while (promPushes)
         {
             Tile to = popLsb(promPushes);
@@ -83,7 +84,7 @@ namespace engine
         // en passant
         if (pos.getEnPassant() != NULL_TILE)
         {
-            Bitboard attackers = nonPromPawns & pawnAttacks[~color][pos.getEnPassant()];
+            Bitboard attackers = nonPromPawns & pawnAttacks[enemyColor][pos.getEnPassant()];
             while (attackers)
             {
                 Tile from = popLsb(attackers);
@@ -92,15 +93,15 @@ namespace engine
         }
     }
 
-    void generatePseudoMoves(PieceType pt, const Position &pos, MoveList &moveList)
+    template <Color C, PieceType PT>
+    void generatePseudoMoves(const Position &pos, MoveList &moveList)
     {
-        Color color = pos.getTurn();
-        Bitboard pieces = pos.getPieces(makePiece(pt, color));
+        Bitboard pieces = pos.getPieces(makePiece(PT, C));
 
         while (pieces != 0)
         {
             Tile from = popLsb(pieces);
-            Bitboard attacks = getAttacksBB(pt, from, pos.getPieces()) & ~pos.getPieces(color);
+            Bitboard attacks = getAttacksBB<PT>(from, pos.getPieces()) & ~pos.getPieces(C);
             while (attacks != 0)
             {
                 Tile to = popLsb(attacks);
@@ -109,23 +110,23 @@ namespace engine
         }
     }
 
+    template <Color C>
     void generatePseudoKingMoves(const Position &pos, MoveList &moveList)
     {
-        Color color = pos.getTurn();
-        Bitboard king = pos.getPieces(makePiece(KING, color));
+        Bitboard king = pos.getPieces(makePiece(KING, C));
         if (king == 0)
         {
             return;
         }
         Tile from = popLsb(king);
-        Bitboard attacks = getAttacksBB(KING, from, pos.getPieces()) & ~pos.getPieces(color);
+        Bitboard attacks = getAttacksBB<KING>(from, pos.getPieces()) & ~pos.getPieces(C);
         while (attacks != 0)
         {
             Tile to = popLsb(attacks);
             moveList.moves[moveList.size++] = Move(from, to);
         }
-        CastlingRight kingSide = color == WHITE ? W_KING_SIDE : B_KING_SIDE;
-        CastlingRight queenSide = color == WHITE ? W_QUEEN_SIDE : B_QUEEN_SIDE;
+        CastlingRight kingSide = C == WHITE ? W_KING_SIDE : B_KING_SIDE;
+        CastlingRight queenSide = C == WHITE ? W_QUEEN_SIDE : B_QUEEN_SIDE;
         if (pos.hasCastlingRight(kingSide) && pos.castlingPathFree(kingSide))
         {
             moveList.moves[moveList.size++] = Move(from, pos.getCastlingKingTo(kingSide), KING_CASTLE);
@@ -136,14 +137,15 @@ namespace engine
         }
     }
 
+    template <Color C>
     void generatePseudoMoves(const Position &pos, MoveList &moveList)
     {
-        generatePseudoPawnMoves(pos, moveList);
-        generatePseudoMoves(KNIGHT, pos, moveList);
-        generatePseudoMoves(BISHOP, pos, moveList);
-        generatePseudoMoves(ROOK, pos, moveList);
-        generatePseudoMoves(QUEEN, pos, moveList);
-        generatePseudoKingMoves(pos, moveList);
+        generatePseudoPawnMoves<C>(pos, moveList);
+        generatePseudoMoves<C, KNIGHT>(pos, moveList);
+        generatePseudoMoves<C, BISHOP>(pos, moveList);
+        generatePseudoMoves<C, ROOK>(pos, moveList);
+        generatePseudoMoves<C, QUEEN>(pos, moveList);
+        generatePseudoKingMoves<C>(pos, moveList);
     }
 
     void generateMoves(Position &pos, MoveList &moveList)
@@ -151,7 +153,9 @@ namespace engine
         Color color = pos.getTurn();
         RevertState state;
         MoveList pseudoMoves;
-        generatePseudoMoves(pos, pseudoMoves);
+
+        color == WHITE ? generatePseudoMoves<WHITE>(pos, pseudoMoves)
+                       : generatePseudoMoves<BLACK>(pos, pseudoMoves);
 
         for (size_t i = 0; i < pseudoMoves.size; i++)
         {

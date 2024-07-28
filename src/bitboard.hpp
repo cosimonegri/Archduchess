@@ -86,17 +86,18 @@ namespace engine
         bitboard &= ~tileBB(tile);
     }
 
-    inline Bitboard shiftBB(Bitboard b, Direction dir)
+    template <Direction D>
+    constexpr Bitboard shiftBB(Bitboard b)
     {
-        return dir == UP           ? b << 8
-               : dir == DOWN       ? b >> 8
-               : dir == RIGHT      ? (b & ~fileH) << 1
-               : dir == LEFT       ? (b & ~fileA) >> 1
-               : dir == UP_RIGHT   ? (b & ~fileH) << 9
-               : dir == UP_LEFT    ? (b & ~fileA) << 7
-               : dir == DOWN_RIGHT ? (b & ~fileH) >> 7
-               : dir == DOWN_LEFT  ? (b & ~fileA) >> 9
-                                   : 0;
+        return D == UP           ? b << 8
+               : D == DOWN       ? b >> 8
+               : D == RIGHT      ? (b & ~fileH) << 1
+               : D == LEFT       ? (b & ~fileA) >> 1
+               : D == UP_RIGHT   ? (b & ~fileH) << 9
+               : D == UP_LEFT    ? (b & ~fileA) << 7
+               : D == DOWN_RIGHT ? (b & ~fileH) >> 7
+               : D == DOWN_LEFT  ? (b & ~fileA) >> 9
+                                 : 0;
     }
 
     inline Bitboard getBetweenBB(Tile tileA, Tile tileB)
@@ -105,10 +106,11 @@ namespace engine
         return betweenBB[tileA][tileB];
     }
 
-    inline Bitboard getAttacksBB(PieceType pt, Tile from, Bitboard occupied = 0ULL)
+    template <PieceType PT>
+    inline Bitboard getAttacksBB(Tile from, Bitboard occupied = 0ULL)
     {
-        assert(pt != PAWN && isValid(from));
-        switch (pt)
+        assert(PT != PAWN && isValid(from));
+        switch (PT)
         {
         case KNIGHT:
             return pseudoAttacks[KNIGHT][from];
@@ -117,9 +119,29 @@ namespace engine
         case ROOK:
             return rookMagics[from][rookMagicKey(from, occupied)];
         case QUEEN:
-            return getAttacksBB(BISHOP, from, occupied) | getAttacksBB(ROOK, from, occupied);
+            return getAttacksBB<BISHOP>(from, occupied) | getAttacksBB<ROOK>(from, occupied);
         case KING:
             return pseudoAttacks[KING][from];
+        default:
+            return 0;
+        }
+    }
+
+    inline Bitboard getAttacksBB(PieceType pt, Tile from, Bitboard occupied = 0ULL)
+    {
+        assert(pt != PAWN && isValid(from));
+        switch (pt)
+        {
+        case KNIGHT:
+            return getAttacksBB<KNIGHT>(from, occupied);
+        case BISHOP:
+            return getAttacksBB<BISHOP>(from, occupied);
+        case ROOK:
+            return getAttacksBB<ROOK>(from, occupied);
+        case QUEEN:
+            return getAttacksBB<BISHOP>(from, occupied) | getAttacksBB<ROOK>(from, occupied);
+        case KING:
+            return getAttacksBB<KING>(from, occupied);
         default:
             return 0;
         }

@@ -26,9 +26,9 @@ namespace engine
         {
             // generate pawn attack mask
             pawnAttacks[WHITE][tile] =
-                shiftBB(tileBB(tile), UP_RIGHT) | shiftBB(tileBB(tile), UP_LEFT);
+                shiftBB<UP_RIGHT>(tileBB(tile)) | shiftBB<UP_LEFT>(tileBB(tile));
             pawnAttacks[BLACK][tile] =
-                shiftBB(tileBB(tile), DOWN_RIGHT) | shiftBB(tileBB(tile), DOWN_LEFT);
+                shiftBB<DOWN_RIGHT>(tileBB(tile)) | shiftBB<DOWN_LEFT>(tileBB(tile));
 
             // generate knight attack mask
             for (int dir : {-17, -15, -10, -6, 6, 10, 15, 17})
@@ -41,8 +41,14 @@ namespace engine
             }
 
             // generate king attack mask
-            for (Direction dir : {UP, DOWN, RIGHT, LEFT, UP_RIGHT, UP_LEFT, DOWN_RIGHT, DOWN_LEFT})
-                pseudoAttacks[KING][tile] |= shiftBB(tileBB(tile), dir);
+            for (int dir : {-9, -8, -7, -1, 1, 7, 8, 9})
+            {
+                Tile to = Tile(tile + dir);
+                if (isValid(to) && manhattanDistance[tile][to] <= 2)
+                {
+                    pseudoAttacks[KING][tile] |= tileBB(to);
+                }
+            }
 
             // generate rook attack mask
             for (Direction dir : {UP, DOWN, RIGHT, LEFT})
@@ -89,16 +95,16 @@ namespace engine
                 else if (fileOf(tileA) == fileOf(tileB) || rankOf(tileA) == rankOf(tileB))
                 {
                     betweenBB[tileA][tileB] =
-                        getAttacksBB(ROOK, tileA, tileBB(tileB)) &
-                        getAttacksBB(ROOK, tileB, tileBB(tileA));
+                        getAttacksBB<ROOK>(tileA, tileBB(tileB)) &
+                        getAttacksBB<ROOK>(tileB, tileBB(tileA));
                     betweenBB[tileA][tileB] |= tileBB(tileB);
                 }
                 else if (((int)fileOf(tileA) - (int)rankOf(tileA) == (int)fileOf(tileB) - (int)rankOf(tileB)) ||
                          ((int)fileOf(tileA) + (int)rankOf(tileA) == (int)fileOf(tileB) + (int)rankOf(tileB)))
                 {
                     betweenBB[tileA][tileB] =
-                        getAttacksBB(BISHOP, tileA, tileBB(tileB)) &
-                        getAttacksBB(BISHOP, tileB, tileBB(tileA));
+                        getAttacksBB<BISHOP>(tileA, tileBB(tileB)) &
+                        getAttacksBB<BISHOP>(tileB, tileBB(tileA));
                     betweenBB[tileA][tileB] |= tileBB(tileB);
                 }
                 else

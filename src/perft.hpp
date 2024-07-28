@@ -15,10 +15,14 @@ namespace engine
         {
             return 1;
         }
-        uint64_t count = 0;
+
         MoveList moveList = MoveList();
         generateMoves(pos, moveList);
 
+        if (depth == 1 && !root)
+            return moveList.size;
+
+        uint64_t count = 0;
         for (size_t i = 0; i < moveList.size; i++)
         {
             pos.makeTurn(moveList.moves[i]);
@@ -27,9 +31,7 @@ namespace engine
 
             count += newCount;
             if (root)
-            {
                 std::cout << moveList.moves[i] << ": " << newCount << std::endl;
-            }
         }
 
         if (root)

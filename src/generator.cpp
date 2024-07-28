@@ -113,6 +113,10 @@ namespace engine
     {
         Color color = pos.getTurn();
         Bitboard king = pos.getPieces(makePiece(KING, color));
+        if (king == 0)
+        {
+            return;
+        }
         Tile from = popLsb(king);
         Bitboard attacks = getAttacksBB(KING, from, pos.getPieces()) & ~pos.getPieces(color);
         while (attacks != 0)

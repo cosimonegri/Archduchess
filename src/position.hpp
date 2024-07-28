@@ -84,8 +84,7 @@ namespace engine
         Tile enPassant;
         Piece captured;
 
-        RevertState(Move m, CastlingRight cast, Tile enp, Piece capt)
-            : move{m}, castling{cast}, enPassant{enp}, captured{capt} {}
+        RevertState *previous;
     };
 
     class Position
@@ -100,7 +99,7 @@ namespace engine
         int halfMove;
         int fullMove;
 
-        std::stack<RevertState *> revertHistory;
+        RevertState *state;
 
         void init();
         void setPiece(Tile tile, Piece piece);
@@ -127,7 +126,7 @@ namespace engine
 
         Bitboard getAttacksBB(Color color) const;
 
-        void makeTurn(Move move);
+        void makeTurn(Move move, RevertState &newState);
         void unmakeTurn();
         void print();
     };

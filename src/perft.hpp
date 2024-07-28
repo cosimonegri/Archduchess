@@ -16,6 +16,7 @@ namespace engine
             return 1;
         }
 
+        RevertState state;
         MoveList moveList = MoveList();
         generateMoves(pos, moveList);
 
@@ -25,7 +26,7 @@ namespace engine
         uint64_t count = 0;
         for (size_t i = 0; i < moveList.size; i++)
         {
-            pos.makeTurn(moveList.moves[i]);
+            pos.makeTurn(moveList.moves[i], state);
             uint64_t newCount = perft(pos, depth - 1, false);
             pos.unmakeTurn();
 

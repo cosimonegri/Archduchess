@@ -149,12 +149,13 @@ namespace engine
     void generateMoves(Position &pos, MoveList &moveList)
     {
         Color color = pos.getTurn();
+        RevertState state;
         MoveList pseudoMoves;
         generatePseudoMoves(pos, pseudoMoves);
 
         for (size_t i = 0; i < pseudoMoves.size; i++)
         {
-            pos.makeTurn(pseudoMoves.moves[i]);
+            pos.makeTurn(pseudoMoves.moves[i], state);
             Bitboard king = pos.getPieces(makePiece(KING, color));
 
             if (pseudoMoves.moves[i].getFlag() == KING_CASTLE)

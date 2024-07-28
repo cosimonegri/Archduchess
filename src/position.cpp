@@ -175,13 +175,18 @@ namespace engine
         return attacks;
     }
 
-    void Position::makeTurn(Move move)
+    void Position::makeTurn(Move move, RevertState &newState)
     {
         Tile from = move.getFrom();
         Tile to = move.getTo();
         MoveFlag flag = move.getFlag();
 
-        revertHistory.push(new RevertState(move, castling, enPassant, board[to]));
+        newState.move = move;
+        newState.castling = castling;
+        newState.enPassant = enPassant;
+        newState.captured = board[to];
+        newState.previous = state;
+        state = &newState;
 
         // remove castling right when the king moves
         if (typeOf(board[from]) == KING)
@@ -271,12 +276,10 @@ namespace engine
 
     void Position::unmakeTurn()
     {
-        if (revertHistory.size() == 0)
+        if (state == NULL)
         {
             return;
         }
-        RevertState *state = revertHistory.top();
-        revertHistory.pop();
         switchTurn();
 
         Tile from = (*state).move.getFrom();
@@ -317,7 +320,7 @@ namespace engine
 
         castling = (*state).castling;
         enPassant = (*state).enPassant;
-        delete state;
+        state = state->previous;
     }
 
     void Position::print()

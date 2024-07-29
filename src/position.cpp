@@ -63,7 +63,7 @@ namespace engine
             char fileChar = c;
             char rankChar = fen.at(index);
             index++;
-            enPassant = makeTile(File(fileChar - 'a'), Rank(rankChar - '1'));
+            enPassant = makeTile(fileChar, rankChar);
             std::cout << toString(enPassant) << std::endl;
         }
         index++;

@@ -156,6 +156,12 @@ namespace engine
         return Rank(tile >> 3);
     }
 
+    inline Tile makeTile(char file, char rank)
+    {
+        assert(file >= 'a' && file <= 'h' && rank >= '1' && rank <= '8');
+        return makeTile(File(file - 'a'), Rank(rank - '1'));
+    }
+
     inline std::string toString(Tile tile)
     {
         return (char)('a' + fileOf(tile)) + std::to_string(rankOf(tile) + 1);

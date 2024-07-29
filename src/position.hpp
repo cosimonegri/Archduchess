@@ -9,7 +9,7 @@
 
 namespace engine
 {
-    static const std::string STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    static const std::string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     static const char FEN_DELIMITER = ' ';
     static const char FEN_RANKS_DELIMITER = '/';
@@ -43,21 +43,6 @@ namespace engine
         {B_ROOK, 'r'},
         {B_QUEEN, 'q'},
         {B_KING, 'k'},
-    };
-
-    static const std::map<Piece, std::string> PIECE_TO_SYMBOL = {
-        {W_PAWN, "\u2659"},
-        {W_KNIGHT, "\u2658"},
-        {W_BISHOP, "\u2657"},
-        {W_ROOK, "\u2656"},
-        {W_QUEEN, "\u2655"},
-        {W_KING, "\u2654"},
-        {B_PAWN, "\u265F"},
-        {B_KNIGHT, "\u265E"},
-        {B_BISHOP, "\u265D"},
-        {B_ROOK, "\u265C"},
-        {B_QUEEN, "\u265B"},
-        {B_KING, "\u265A"},
     };
 
     static const std::map<char, Color> CHAR_TO_COLOR = {

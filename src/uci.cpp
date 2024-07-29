@@ -9,6 +9,7 @@
 #include "uci.hpp"
 #include "position.hpp"
 #include "perft.hpp"
+#include "log.hpp"
 
 namespace engine
 {
@@ -21,18 +22,19 @@ namespace engine
             if (!std::getline(std::cin, command))
                 command = "quit";
 
+            log(command);
             std::istringstream iss(command);
             token.clear();
             iss >> token;
 
-            if (token == "quit")
-                break;
-
-            else if (token == "uci")
-                std::cout << "uciok" << std::endl;
+            if (token == "uci")
+                respond("uciok");
 
             else if (token == "isready")
-                std::cout << "readyok" << std::endl;
+                respond("readyok");
+
+            else if (token == "ucinewgame")
+                continue;
 
             else if (token == "position")
                 processPosition(iss);
@@ -40,12 +42,24 @@ namespace engine
             else if (token == "go")
                 processGo(iss);
 
+            else if (token == "stop")
+                continue;
+
+            else if (token == "quit")
+                break;
+
             else if (token == "d")
                 printPosition();
 
             else if (token == "test")
                 UCIEngine::runPerftTest();
         }
+    }
+
+    void UCIEngine::respond(std::string message)
+    {
+        std::cout << message << std::endl;
+        log(message);
     }
 
     void UCIEngine::processPosition(std::istringstream &iss)
@@ -96,6 +110,8 @@ namespace engine
         }
         else
         {
+            // todo engine should be able to read input while thinking
+            respond("bestmove " + bot.chooseMove());
             return;
         }
     }
@@ -108,9 +124,9 @@ namespace engine
     void UCIEngine::runPerft(int depth)
     {
         Position pos = bot.getPosition();
-        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+        auto begin = std::chrono::steady_clock::now();
         perft(pos, depth);
-        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        auto end = std::chrono::steady_clock::now();
         std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl
                   << std::endl;
     }

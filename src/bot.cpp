@@ -1,10 +1,17 @@
 #include "bot.hpp"
 #include "position.hpp"
 #include "generator.hpp"
+#include "move.hpp"
 #include "types.hpp"
 
 namespace engine
 {
+    std::string moveToUci(Move move)
+    {
+        std::string uciMove = toString(move.getFrom()) + toString(move.getTo());
+        return move.isPromotion() ? uciMove + PROM_TO_CHAR.at(move.getFlag()) : uciMove;
+    }
+
     Bot::Bot() : pos{Position(START_FEN)} {};
 
     // todo maybe return a copy
@@ -75,5 +82,12 @@ namespace engine
 
         // move format is valid but the move is not valid
         return;
+    }
+
+    std::string Bot::chooseMove()
+    {
+        MoveList moveList;
+        generateMoves(pos, moveList);
+        return moveToUci(moveList.moves[rand() % moveList.size]);
     }
 }

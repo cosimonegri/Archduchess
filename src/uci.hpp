@@ -2,6 +2,7 @@
 #define UCI
 
 #include <sstream>
+#include <string>
 #include "bot.hpp"
 
 namespace engine
@@ -10,6 +11,8 @@ namespace engine
     {
     private:
         Bot bot;
+
+        void respond(std::string message);
 
         void processPosition(std::istringstream &iss);
         void processGo(std::istringstream &iss);

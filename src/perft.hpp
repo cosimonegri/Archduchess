@@ -37,7 +37,7 @@ namespace engine
         if (root)
         {
             std::cout << std::endl
-                      << "Total: " << count << std::endl;
+                      << "Nodes: " << count << std::endl;
         }
         return count;
     }

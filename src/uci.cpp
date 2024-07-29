@@ -9,7 +9,7 @@
 #include "uci.hpp"
 #include "position.hpp"
 #include "perft.hpp"
-#include "log.hpp"
+#include "misc.hpp"
 
 namespace engine
 {
@@ -127,7 +127,7 @@ namespace engine
         auto begin = std::chrono::steady_clock::now();
         perft(pos, depth);
         auto end = std::chrono::steady_clock::now();
-        std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl
+        std::cout << timeReport(begin, end) << std::endl
                   << std::endl;
     }
 

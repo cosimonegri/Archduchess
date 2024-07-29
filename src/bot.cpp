@@ -1,4 +1,5 @@
 #include "bot.hpp"
+#include "search.hpp"
 #include "position.hpp"
 #include "generator.hpp"
 #include "move.hpp"
@@ -86,8 +87,6 @@ namespace engine
 
     std::string Bot::chooseMove()
     {
-        MoveList moveList;
-        generateMoves(pos, moveList);
-        return moveToUci(moveList.moves[rand() % moveList.size]);
+        return moveToUci(searchMan.getBestMove(pos));
     }
 }

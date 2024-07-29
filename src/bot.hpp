@@ -3,8 +3,9 @@
 
 #include <string>
 #include <map>
-#include "move.hpp"
+#include "search.hpp"
 #include "position.hpp"
+#include "move.hpp"
 
 namespace engine
 {
@@ -25,6 +26,7 @@ namespace engine
     {
     private:
         Position pos;
+        SearchManager searchMan;
 
     public:
         Bot();

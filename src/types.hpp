@@ -58,7 +58,7 @@ namespace engine
         return PieceType(piece & 7);
     }
 
-    inline Color colorOf(Piece piece)
+    constexpr Color colorOf(Piece piece)
     {
         assert(piece != NULL_PIECE);
         return Color((piece >> 3));

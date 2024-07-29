@@ -8,10 +8,9 @@
 
 namespace engine
 {
-
     uint64_t perft(Position &pos, int depth, bool root = true)
     {
-        if (depth == 0)
+        if (depth <= 0)
         {
             return 1;
         }
@@ -26,7 +25,7 @@ namespace engine
         uint64_t count = 0;
         for (size_t i = 0; i < moveList.size; i++)
         {
-            pos.makeTurn(moveList.moves[i], state);
+            pos.makeTurn(moveList.moves[i], &state);
             uint64_t newCount = perft(pos, depth - 1, false);
             pos.unmakeTurn();
 

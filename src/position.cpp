@@ -181,18 +181,21 @@ namespace engine
         return color == WHITE ? getAttacksBB<WHITE>() : getAttacksBB<BLACK>();
     }
 
-    void Position::makeTurn(Move move, RevertState &newState)
+    void Position::makeTurn(Move move, RevertState *newState)
     {
         Tile from = move.getFrom();
         Tile to = move.getTo();
         MoveFlag flag = move.getFlag();
 
-        newState.move = move;
-        newState.castling = castling;
-        newState.enPassant = enPassant;
-        newState.captured = board[to];
-        newState.previous = state;
-        state = &newState;
+        if (newState != NULL)
+        {
+            newState->move = move;
+            newState->castling = castling;
+            newState->enPassant = enPassant;
+            newState->captured = board[to];
+            newState->previous = state;
+            state = newState;
+        }
 
         // remove castling right when the king moves
         if (typeOf(board[from]) == KING)
@@ -288,16 +291,16 @@ namespace engine
         }
         switchTurn();
 
-        Tile from = (*state).move.getFrom();
-        Tile to = (*state).move.getTo();
-        MoveFlag flag = (*state).move.getFlag();
+        Tile from = state->move.getFrom();
+        Tile to = state->move.getTo();
+        MoveFlag flag = state->move.getFlag();
 
         // execute move, and add the captured piece if there is one
         setPiece(from, board[to]);
         clearPiece(to);
-        if ((*state).captured != NULL_PIECE)
+        if (state->captured != NULL_PIECE)
         {
-            setPiece(to, (*state).captured);
+            setPiece(to, state->captured);
         }
 
         if (flag == EN_PASSANT)
@@ -324,8 +327,8 @@ namespace engine
             setPiece(from, makePiece(PAWN, turn));
         }
 
-        castling = (*state).castling;
-        enPassant = (*state).enPassant;
+        castling = state->castling;
+        enPassant = state->enPassant;
         state = state->previous;
     }
 
@@ -351,7 +354,8 @@ namespace engine
             std::cout << "|" << std::endl;
             std::cout << "  +---+---+---+---+---+---+---+---+" << std::endl;
         }
-        std::cout << "    A   B   C   D   E   F   G   H  " << std::endl;
+        std::cout << "    a   b   c   d   e   f   g   h  " << std::endl
+                  << std::endl;
     }
 
     void Position::init()

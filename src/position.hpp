@@ -128,7 +128,7 @@ namespace engine
         Bitboard getAttacksBB() const;
         Bitboard getAttacksBB(Color color) const;
 
-        void makeTurn(Move move, RevertState &newState);
+        void makeTurn(Move move, RevertState *newState = NULL);
         void unmakeTurn();
         void print();
     };

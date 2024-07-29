@@ -159,7 +159,7 @@ namespace engine
 
         for (size_t i = 0; i < pseudoMoves.size; i++)
         {
-            pos.makeTurn(pseudoMoves.moves[i], state);
+            pos.makeTurn(pseudoMoves.moves[i], &state);
             Bitboard king = pos.getPieces(makePiece(KING, color));
 
             if (pseudoMoves.moves[i].getFlag() == KING_CASTLE)

@@ -26,7 +26,7 @@ namespace engine
         constexpr Bitboard doubleRank = C == WHITE ? rank3 : rank6;
         constexpr Bitboard finalRank = C == WHITE ? rank7 : rank2;
 
-        Bitboard pawns = pos.getPieces(makePiece(PAWN, C));
+        Bitboard pawns = pos.getPieces(PAWN, C);
         Bitboard empty = pos.getEmpty();
         Bitboard enemies = pos.getPieces(enemyColor);
 
@@ -96,7 +96,7 @@ namespace engine
     template <Color C, PieceType PT>
     void generatePseudoMoves(const Position &pos, MoveList &moveList)
     {
-        Bitboard pieces = pos.getPieces(makePiece(PT, C));
+        Bitboard pieces = pos.getPieces(PT, C);
 
         while (pieces != 0)
         {
@@ -114,7 +114,7 @@ namespace engine
     template <Color C>
     void generateKingMoves(const Position &pos, MoveList &moveList)
     {
-        Bitboard king = pos.getPieces(makePiece(KING, C));
+        Bitboard king = pos.getPieces(KING, C);
         Tile from = popLsb(king);
         Bitboard attackedTiles = pos.getAttacksBB(~C);
         Bitboard attacks = getAttacksBB<KING>(from, pos.getPieces()) & ~pos.getPieces(C) & ~attackedTiles;
@@ -155,7 +155,7 @@ namespace engine
     void generateMoves(Position &pos, MoveList &moveList)
     {
         Color color = pos.getTurn();
-        Bitboard king = pos.getPieces(makePiece(KING, color));
+        Bitboard king = pos.getPieces(KING, color);
         Tile kingTile = popLsb(king);
 
         RevertState state;

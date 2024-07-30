@@ -97,6 +97,7 @@ namespace engine
         Piece getPiece(Tile tile) const;
         Bitboard getPieces(PieceType pt) const;
         Bitboard getPieces(Color color) const;
+        Bitboard getPieces(PieceType pt, Color color) const;
         Bitboard getPieces(Piece piece) const;
         Bitboard getPieces() const;
         Bitboard getEmpty() const;

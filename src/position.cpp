@@ -79,10 +79,7 @@ namespace engine
 
     Bitboard Position::getPieces(PieceType pt) const
     {
-        if (pt == NULL_TYPE)
-        {
-            return getEmpty();
-        }
+        assert(pt != NULL_TYPE);
         return typeBB[pt];
     }
 
@@ -91,12 +88,15 @@ namespace engine
         return colorBB[color];
     }
 
+    Bitboard Position::getPieces(PieceType pt, Color color) const
+    {
+        assert(pt != NULL_TYPE);
+        return typeBB[pt] & colorBB[color];
+    }
+
     Bitboard Position::getPieces(Piece piece) const
     {
-        if (piece == NULL_PIECE)
-        {
-            return getEmpty();
-        }
+        assert(piece != NULL_PIECE);
         return typeBB[typeOf(piece)] & colorBB[colorOf(piece)];
     }
 
@@ -159,15 +159,15 @@ namespace engine
         constexpr Direction diagRight = getPawnRightDir(C);
         constexpr Direction diagLeft = getPawnLeftDir(C);
 
-        Bitboard pawns = getPieces(makePiece(PAWN, C));
+        Bitboard pawns = getPieces(PAWN, C);
         Bitboard attacks = 0;
         attacks |= shiftBB<diagRight>(pawns);
         attacks |= shiftBB<diagLeft>(pawns);
 
         for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
-            Bitboard occupied = getPieces() & ~getPieces(makePiece(KING, ~C));
-            Bitboard pieces = getPieces(makePiece(pt, C));
+            Bitboard occupied = getPieces() & ~getPieces(KING, ~C);
+            Bitboard pieces = getPieces(pt, C);
             while (pieces != 0)
             {
                 Tile from = popLsb(pieces);
@@ -187,13 +187,12 @@ namespace engine
         Bitboard allPieces = getPieces();
         for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
-            Piece piece = makePiece(pt, color);
-            if ((engine::getAttacksBB(pt, tile, allPieces) & getPieces(piece)) != 0)
+            if ((engine::getAttacksBB(pt, tile, allPieces) & getPieces(pt, color)) != 0)
             {
                 return true;
             }
         }
-        Bitboard pawns = getPieces(makePiece(PAWN, color));
+        Bitboard pawns = getPieces(PAWN, color);
         return color == WHITE
                    ? (getPawnAttacksBB<BLACK>(tile) & pawns) != 0
                    : (getPawnAttacksBB<WHITE>(tile) & pawns) != 0;

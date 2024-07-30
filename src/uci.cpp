@@ -22,7 +22,7 @@ namespace engine
             if (!std::getline(std::cin, command))
                 command = "quit";
 
-            log(command);
+            // log(command);
             std::istringstream iss(command);
             token.clear();
             iss >> token;
@@ -59,7 +59,7 @@ namespace engine
     void UCIEngine::respond(std::string message)
     {
         std::cout << message << std::endl;
-        log(message);
+        // log(message);
     }
 
     void UCIEngine::processPosition(std::istringstream &iss)
@@ -125,9 +125,13 @@ namespace engine
     {
         Position pos = bot.getPosition();
         auto begin = std::chrono::steady_clock::now();
-        perft(pos, depth);
+        uint64_t nodes = perft(pos, depth);
         auto end = std::chrono::steady_clock::now();
-        std::cout << timeReport(begin, end) << std::endl
+        int64_t elapsedTime = getTimeMs(begin, end);
+
+        std::cout << "\nNodes:\t" << nodes << std::endl;
+        std::cout << "Time:\t" << elapsedTime << "ms" << std::endl;
+        std::cout << "NPS:\t" << (nodes / elapsedTime) << "k" << std::endl
                   << std::endl;
     }
 

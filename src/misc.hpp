@@ -27,9 +27,9 @@ namespace engine
         logFile.close();
     }
 
-    inline std::string timeReport(std::chrono::steady_clock::time_point begin, std::chrono::steady_clock::time_point end)
+    inline int64_t getTimeMs(std::chrono::steady_clock::time_point begin, std::chrono::steady_clock::time_point end)
     {
-        return "Time: " + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()) + " ms";
+        return std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
     }
 }
 

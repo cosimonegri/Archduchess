@@ -17,9 +17,11 @@ namespace engine
         auto begin = std::chrono::steady_clock::now();
         uint64_t nodes = search(pos, result, 6, MIN_EVAL, MAX_EVAL, pos.getTurn() == WHITE);
         auto end = std::chrono::steady_clock::now();
+        int64_t elapsedTime = getTimeMs(begin, end);
 
         debug("Nodes evaluated: " + std::to_string(nodes));
-        debug(timeReport(begin, end));
+        debug("Time: " + std::to_string(elapsedTime) + "ms");
+        debug("NPS: " + std::to_string(nodes / elapsedTime) + "k\n");
 
         return result.bestMove;
     }

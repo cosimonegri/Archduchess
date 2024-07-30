@@ -34,11 +34,6 @@ namespace engine
                 std::cout << moveList.moves[i] << ": " << newCount << std::endl;
         }
 
-        if (root)
-        {
-            std::cout << std::endl
-                      << "Nodes: " << count << std::endl;
-        }
         return count;
     }
 }

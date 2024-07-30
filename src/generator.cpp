@@ -84,7 +84,7 @@ namespace engine
         // en passant
         if (pos.getEnPassant() != NULL_TILE)
         {
-            Bitboard attackers = nonPromPawns & pawnAttacks[enemyColor][pos.getEnPassant()];
+            Bitboard attackers = nonPromPawns & getPawnAttacksBB<enemyColor>(pos.getEnPassant());
             while (attackers)
             {
                 Tile from = popLsb(attackers);
@@ -110,33 +110,38 @@ namespace engine
         }
     }
 
+    // Generate all legal king moves
     template <Color C>
-    void generatePseudoKingMoves(const Position &pos, MoveList &moveList)
+    void generateKingMoves(const Position &pos, MoveList &moveList)
     {
         Bitboard king = pos.getPieces(makePiece(KING, C));
-        if (king == 0)
-        {
-            return;
-        }
         Tile from = popLsb(king);
-        Bitboard attacks = getAttacksBB<KING>(from, pos.getPieces()) & ~pos.getPieces(C);
+        Bitboard attackedTiles = pos.getAttacksBB(~C);
+        Bitboard attacks = getAttacksBB<KING>(from, pos.getPieces()) & ~pos.getPieces(C) & ~attackedTiles;
         while (attacks != 0)
         {
             Tile to = popLsb(attacks);
             moveList.moves[moveList.size++] = Move(from, to);
         }
+
         CastlingRight kingSide = C == WHITE ? W_KING_SIDE : B_KING_SIDE;
-        CastlingRight queenSide = C == WHITE ? W_QUEEN_SIDE : B_QUEEN_SIDE;
-        if (pos.hasCastlingRight(kingSide) && pos.castlingPathFree(kingSide))
+        if (pos.hasCastlingRight(kingSide) &&
+            pos.castlingPathFree(kingSide) &&
+            (pos.getCastlingKingPath(kingSide) & attackedTiles) == 0)
         {
             moveList.moves[moveList.size++] = Move(from, pos.getCastlingKingTo(kingSide), KING_CASTLE);
         }
-        if (pos.hasCastlingRight(queenSide) && pos.castlingPathFree(queenSide))
+
+        CastlingRight queenSide = C == WHITE ? W_QUEEN_SIDE : B_QUEEN_SIDE;
+        if (pos.hasCastlingRight(queenSide) &&
+            pos.castlingPathFree(queenSide) &&
+            (pos.getCastlingKingPath(queenSide) & attackedTiles) == 0)
         {
             moveList.moves[moveList.size++] = Move(from, pos.getCastlingKingTo(queenSide), QUEEN_CASTLE);
         }
     }
 
+    // Generate all pseudo legal moves except for king moves
     template <Color C>
     void generatePseudoMoves(const Position &pos, MoveList &moveList)
     {
@@ -145,12 +150,14 @@ namespace engine
         generatePseudoMoves<C, BISHOP>(pos, moveList);
         generatePseudoMoves<C, ROOK>(pos, moveList);
         generatePseudoMoves<C, QUEEN>(pos, moveList);
-        generatePseudoKingMoves<C>(pos, moveList);
     }
 
     void generateMoves(Position &pos, MoveList &moveList)
     {
         Color color = pos.getTurn();
+        Bitboard king = pos.getPieces(makePiece(KING, color));
+        Tile kingTile = popLsb(king);
+
         RevertState state;
         MoveList pseudoMoves;
 
@@ -160,24 +167,14 @@ namespace engine
         for (size_t i = 0; i < pseudoMoves.size; i++)
         {
             pos.makeTurn(pseudoMoves.moves[i], &state);
-            Bitboard king = pos.getPieces(makePiece(KING, color));
-
-            if (pseudoMoves.moves[i].getFlag() == KING_CASTLE)
-            {
-                CastlingRight kingSide = color == WHITE ? W_KING_SIDE : B_KING_SIDE;
-                king |= pos.getCastlingKingPath(kingSide);
-            }
-            else if (pseudoMoves.moves[i].getFlag() == QUEEN_CASTLE)
-            {
-                CastlingRight queenSide = color == WHITE ? W_QUEEN_SIDE : B_QUEEN_SIDE;
-                king |= pos.getCastlingKingPath(queenSide);
-            }
-
-            if ((pos.getAttacksBB(~color) & king) == 0)
+            if (!pos.isTileAttackedBy(kingTile, ~color))
             {
                 moveList.moves[moveList.size++] = pseudoMoves.moves[i];
             }
             pos.unmakeTurn();
         }
+
+        color == WHITE ? generateKingMoves<WHITE>(pos, moveList)
+                       : generateKingMoves<BLACK>(pos, moveList);
     }
 }

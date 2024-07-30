@@ -106,6 +106,13 @@ namespace engine
         return betweenBB[tileA][tileB];
     }
 
+    template <Color C>
+    inline Bitboard getPawnAttacksBB(Tile from)
+    {
+        assert(isValid(from));
+        return pawnAttacks[C][from];
+    }
+
     template <PieceType PT>
     inline Bitboard getAttacksBB(Tile from, Bitboard occupied = 0ULL)
     {

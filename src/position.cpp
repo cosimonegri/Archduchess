@@ -83,7 +83,7 @@ namespace engine
         {
             return getEmpty();
         }
-        return typeBB[pt - PAWN];
+        return typeBB[pt];
     }
 
     Bitboard Position::getPieces(Color color) const
@@ -166,11 +166,12 @@ namespace engine
 
         for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
+            Bitboard occupied = getPieces() & ~getPieces(makePiece(KING, ~C));
             Bitboard pieces = getPieces(makePiece(pt, C));
             while (pieces != 0)
             {
                 Tile from = popLsb(pieces);
-                attacks |= engine::getAttacksBB(pt, from, getPieces()) & ~getPieces(C);
+                attacks |= engine::getAttacksBB(pt, from, occupied);
             }
         }
         return attacks;
@@ -179,6 +180,23 @@ namespace engine
     Bitboard Position::getAttacksBB(Color color) const
     {
         return color == WHITE ? getAttacksBB<WHITE>() : getAttacksBB<BLACK>();
+    }
+
+    bool Position::isTileAttackedBy(Tile tile, Color color) const
+    {
+        Bitboard allPieces = getPieces();
+        for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
+        {
+            Piece piece = makePiece(pt, color);
+            if ((engine::getAttacksBB(pt, tile, allPieces) & getPieces(piece)) != 0)
+            {
+                return true;
+            }
+        }
+        Bitboard pawns = getPieces(makePiece(PAWN, color));
+        return color == WHITE
+                   ? (getPawnAttacksBB<BLACK>(tile) & pawns) != 0
+                   : (getPawnAttacksBB<WHITE>(tile) & pawns) != 0;
     }
 
     void Position::makeTurn(Move move, RevertState *newState)

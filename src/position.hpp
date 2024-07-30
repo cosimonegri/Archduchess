@@ -112,6 +112,7 @@ namespace engine
         template <Color C>
         Bitboard getAttacksBB() const;
         Bitboard getAttacksBB(Color color) const;
+        bool isTileAttackedBy(Tile tile, Color color) const;
 
         void makeTurn(Move move, RevertState *newState = NULL);
         void unmakeTurn();

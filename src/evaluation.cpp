@@ -2,16 +2,16 @@
 
 namespace engine
 {
-    int evaluate(Position &pos)
+    Eval evaluate(Position &pos)
     {
-        int eval = 0;
+        Eval eval = 0;
         for (Tile tile = A1; tile <= H8; ++tile)
         {
             Piece piece = pos.getPiece(tile);
             if (piece != NULL_PIECE)
             {
-                eval += getPieceEval(piece);
-                eval += getPiecePosEval(piece, tile);
+                eval += getPieceEval(piece) * colorMult[colorOf(piece)];
+                eval += getPiecePosEval(piece, tile) * colorMult[colorOf(piece)];
             }
         }
         return eval;

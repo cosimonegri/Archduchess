@@ -31,52 +31,51 @@ namespace engine
 
     class Move
     {
-    private:
-        uint16_t move;
+    protected:
+        uint16_t data;
 
     public:
         constexpr Move()
-            : move(0) {};
+            : data(0) {};
         constexpr Move(Tile from, Tile to, MoveFlag flag = QUIET)
-            : move(flag << 12 | to << 6 | from) {};
+            : data(flag << 12 | to << 6 | from) {};
 
         constexpr Tile getFrom() const
         {
             assert(isValid());
-            return Tile(move & 0x3f);
+            return Tile(data & 0x3f);
         }
         constexpr Tile getTo() const
         {
             assert(isValid());
-            return Tile((move >> 6) & 0x3f);
+            return Tile((data >> 6) & 0x3f);
         }
 
         constexpr MoveFlag getFlag() const
         {
             assert(isValid());
-            return MoveFlag((move >> 12) & 0x0f);
+            return MoveFlag((data >> 12) & 0x0f);
         }
 
         constexpr bool isCapture() const
         {
-            return (move & captureMask) != 0;
+            return (data & captureMask) != 0;
         }
         constexpr bool isPromotion() const
         {
-            return (move & promotionMask) != 0;
+            return (data & promotionMask) != 0;
         }
         constexpr bool isCastling() const
         {
             return (getFlag() == KING_CASTLE || getFlag() == QUEEN_CASTLE);
         }
 
-        constexpr bool isValid() const
-        {
-            return move != 0;
-        }
+        constexpr bool isValid() const { return data != 0; }
 
-        constexpr bool operator==(Move other) const { return move == other.move; }
-        constexpr bool operator!=(Move other) const { return move != other.move; }
+        constexpr uint16_t raw() const { return data; }
+
+        constexpr bool operator==(Move other) const { return data == other.data; }
+        constexpr bool operator!=(Move other) const { return data != other.data; }
 
         friend std::ostream &operator<<(std::ostream &stream, const engine::Move &move)
         {

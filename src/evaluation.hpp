@@ -8,14 +8,16 @@
 
 namespace engine
 {
-    constexpr int MIN_EVAL = std::numeric_limits<int>::min();
-    constexpr int MAX_EVAL = std::numeric_limits<int>::max();
+    using Eval = int;
 
-    constexpr int pieceEval[7] = {0, 100, 300, 325, 500, 900, 100000000};
-    constexpr int colorMult[2] = {1, -1};
+    constexpr Eval MIN_EVAL = std::numeric_limits<int>::min();
+    constexpr Eval MAX_EVAL = std::numeric_limits<int>::max();
+
+    constexpr Eval pieceEval[7] = {0, 100, 300, 325, 500, 900, 100000000};
+    constexpr Eval colorMult[2] = {1, -1};
 
     // clang-format off
-    constexpr int pawnValues[64] = {
+    constexpr Eval pawnValues[64] = {
          0,  0,  0,  0,  0,  0,  0,  0,
         50, 50, 50, 50, 50, 50, 50, 50,
         10, 10, 20, 30, 30, 20, 10, 10,
@@ -25,7 +27,7 @@ namespace engine
          5, 10, 10,-20,-20, 10, 10,  5,
          0,  0,  0,  0,  0,  0,  0,  0,
     };
-    constexpr int knightValues[64] = {
+    constexpr Eval knightValues[64] = {
         -50,-40,-30,-30,-30,-30,-40,-50,
         -40,-20,  0,  0,  0,  0,-20,-40,
         -30,  0, 10, 15, 15, 10,  0,-30,
@@ -35,7 +37,7 @@ namespace engine
         -40,-20,  0,  5,  5,  0,-20,-40,
         -50,-40,-30,-30,-30,-30,-40,-50,
     };
-    constexpr int bishopValues[64] = {
+    constexpr Eval bishopValues[64] = {
         -20,-10,-10,-10,-10,-10,-10,-20,
         -10,  0,  0,  0,  0,  0,  0,-10,
         -10,  0,  5, 10, 10,  5,  0,-10,
@@ -45,7 +47,7 @@ namespace engine
         -10,  5,  0,  0,  0,  0,  5,-10,
         -20,-10,-10,-10,-10,-10,-10,-20,
     };
-    constexpr int rookValues[64] = {
+    constexpr Eval rookValues[64] = {
          0,  0,  0,  0,  0,  0,  0,  0,
          5, 10, 10, 10, 10, 10, 10,  5,
         -5,  0,  0,  0,  0,  0,  0, -5,
@@ -55,7 +57,7 @@ namespace engine
         -5,  0,  0,  0,  0,  0,  0, -5,
          0,  0,  0,  5,  5,  0,  0,  0,
     };
-    constexpr int queenValues[64] = {
+    constexpr Eval queenValues[64] = {
         -20,-10,-10, -5, -5,-10,-10,-20,
         -10,  0,  0,  0,  0,  0,  0,-10,
         -10,  0,  5,  5,  5,  5,  0,-10,
@@ -65,7 +67,7 @@ namespace engine
         -10,  0,  5,  0,  0,  0,  0,-10,
         -20,-10,-10, -5, -5,-10,-10,-20,
     };
-    constexpr int kingValues[64] = {
+    constexpr Eval kingValues[64] = {
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
@@ -77,10 +79,10 @@ namespace engine
     };
     // clang-format on
 
-    constexpr int getPieceEval(Piece piece)
+    constexpr Eval getPieceEval(Piece piece)
     {
         assert(piece != NULL_PIECE);
-        return pieceEval[typeOf(piece)] * colorMult[colorOf(piece)];
+        return pieceEval[typeOf(piece)];
     }
 
     inline int getPiecePosEval(Piece piece, Tile tile)
@@ -91,17 +93,17 @@ namespace engine
         int index = color == WHITE
                         ? (7 - rankOf(tile)) * 8 + fileOf(tile)
                         : tile;
-        int posEval = pt == PAWN     ? pawnValues[index]
-                      : pt == KNIGHT ? knightValues[index]
-                      : pt == BISHOP ? bishopValues[index]
-                      : pt == ROOK   ? rookValues[index]
-                      : pt == QUEEN  ? queenValues[index]
-                      : pt == KING   ? kingValues[index]
-                                     : 0;
-        return posEval * colorMult[color];
+        Eval posEval = pt == PAWN     ? pawnValues[index]
+                       : pt == KNIGHT ? knightValues[index]
+                       : pt == BISHOP ? bishopValues[index]
+                       : pt == ROOK   ? rookValues[index]
+                       : pt == QUEEN  ? queenValues[index]
+                       : pt == KING   ? kingValues[index]
+                                      : 0;
+        return posEval;
     }
 
-    int evaluate(Position &pos);
+    Eval evaluate(Position &pos);
 }
 
 #endif

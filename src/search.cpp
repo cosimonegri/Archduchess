@@ -26,10 +26,10 @@ namespace engine
         return result.bestMove;
     }
 
-    uint64_t SearchManager::search(Position &pos, SearchResult &result, int depth, int alpha, int beta, bool maximize)
+    uint64_t SearchManager::search(Position &pos, SearchResult &result,
+                                   int depth, Eval alpha, Eval beta, bool maximize)
     {
-        assert(depth >= 0);
-        if (depth == 0)
+        if (depth <= 0)
         {
             result.eval = evaluate(pos);
             return 1;
@@ -37,28 +37,27 @@ namespace engine
 
         SearchResult newResult;
         RevertState state;
-        MoveList moveList, sortedList;
+        MoveList moveList;
         generateMoves(pos, moveList);
 
-        for (size_t i = 0; i < moveList.size; i++)
-            if (moveList.moves[i].isPromotion())
-                sortedList.moves[sortedList.size++] = moveList.moves[i];
-
-        for (size_t i = 0; i < moveList.size; i++)
-            if (moveList.moves[i].isCapture() && !moveList.moves[i].isPromotion())
-                sortedList.moves[sortedList.size++] = moveList.moves[i];
-
-        for (size_t i = 0; i < moveList.size; i++)
-            if (!moveList.moves[i].isCapture() && !moveList.moves[i].isPromotion())
-                sortedList.moves[sortedList.size++] = moveList.moves[i];
+        ExtMoveList extMoveList = ExtMoveList(moveList);
+        for (size_t i = 0; i < extMoveList.size; i++)
+        {
+            extMoveList.moves[i].eval = evaluateMove(pos, moveList.moves[i]);
+        }
+        if (extMoveList.size > 1)
+        {
+            std::sort(extMoveList.moves, extMoveList.moves + extMoveList.size - 1, [](const ExtendedMove &a, const ExtendedMove &b)
+                      { return a.eval > b.eval; });
+        }
 
         // set evaluation to the worst possible
         result.eval = maximize ? MIN_EVAL : MAX_EVAL;
 
         uint64_t count = 0;
-        for (size_t i = 0; i < sortedList.size; i++)
+        for (size_t i = 0; i < extMoveList.size; i++)
         {
-            pos.makeTurn(sortedList.moves[i], &state);
+            pos.makeTurn(extMoveList.moves[i], &state);
             count += search(pos, newResult, depth - 1, alpha, beta, !maximize);
             pos.unmakeTurn();
 
@@ -66,7 +65,7 @@ namespace engine
                 (!maximize && newResult.eval < result.eval))
             {
                 result.eval = newResult.eval;
-                result.bestMove = sortedList.moves[i];
+                result.bestMove = extMoveList.moves[i];
             }
 
             if (alpha >= beta)
@@ -78,5 +77,20 @@ namespace engine
                 beta = std::min(beta, result.eval);
         }
         return count;
+    }
+
+    int SearchManager::evaluateMove(Position &pos, Move &move)
+    {
+        int eval = 0;
+        Piece captured = pos.getPiece(move.getTo());
+        if (move.isPromotion())
+        {
+            eval += 2000;
+        }
+        if (captured != NULL_PIECE)
+        {
+            eval += 1000 + getPieceEval(captured) - getPieceEval(pos.getPiece(move.getFrom()));
+        }
+        return eval;
     }
 }

@@ -1,19 +1,25 @@
+#include <random>
 #include "evaluation.hpp"
+#include "bitboard.hpp"
 
 namespace engine
 {
     Eval evaluate(Position &pos)
     {
         Eval eval = 0;
-        for (Tile tile = A1; tile <= H8; ++tile)
+        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
-            Piece piece = pos.getPiece(tile);
-            if (piece != NULL_PIECE)
+            for (Color color : {WHITE, BLACK})
             {
-                eval += getPieceEval(piece) * colorMult[colorOf(piece)];
-                eval += getPiecePosEval(piece, tile) * colorMult[colorOf(piece)];
+                Bitboard pieces = pos.getPieces(pt, color);
+                while (pieces != 0)
+                {
+                    Tile tile = popLsb(pieces);
+                    eval += getPieceEval(pt) * colorMult[color];
+                    eval += getPiecePosEval(pt, color, tile) * colorMult[color];
+                }
             }
         }
-        return eval;
+        return eval + (rand() % 5) - 2;
     }
 }

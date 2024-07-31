@@ -5,12 +5,16 @@
 #include <chrono>
 #include <cstdint>
 #include <cassert>
+#include <time.h>
 #include "uci.hpp"
+#include "zobrist.hpp"
 #include "bitboard.hpp"
 
 int main()
 {
+    srand(time(0));
     engine::bitboard::init();
+    engine::zobrist::init();
 
     engine::UCIEngine eng;
     eng.loop();

@@ -79,17 +79,14 @@ namespace engine
     };
     // clang-format on
 
-    constexpr Eval getPieceEval(Piece piece)
+    constexpr Eval getPieceEval(PieceType pt)
     {
-        assert(piece != NULL_PIECE);
-        return pieceEval[typeOf(piece)];
+        return pieceEval[pt];
     }
 
-    inline int getPiecePosEval(Piece piece, Tile tile)
+    inline int getPiecePosEval(PieceType pt, Color color, Tile tile)
     {
-        assert(piece != NULL_PIECE);
-        PieceType pt = typeOf(piece);
-        Color color = colorOf(piece);
+        assert(pt != NULL_TYPE);
         int index = color == WHITE
                         ? (7 - rankOf(tile)) * 8 + fileOf(tile)
                         : tile;

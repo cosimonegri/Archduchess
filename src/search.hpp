@@ -1,6 +1,8 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <unordered_map>
+#include "transposition.hpp"
 #include "evaluation.hpp"
 #include "position.hpp"
 #include "generator.hpp"
@@ -35,6 +37,8 @@ namespace engine
     class SearchManager
     {
     private:
+        std::unordered_map<Key, TTEntry> TTtable;
+
         uint64_t search(Position &pos, SearchResult &result,
                         int depth, Eval alpha, Eval beta, bool maximize);
         int evaluateMove(Position &pos, Move &move);

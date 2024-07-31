@@ -13,6 +13,8 @@ namespace engine
 {
     Move SearchManager::getBestMove(Position &pos)
     {
+        TTtable.clear();
+
         SearchResult result;
         auto begin = std::chrono::steady_clock::now();
         uint64_t nodes = search(pos, result, 6, MIN_EVAL, MAX_EVAL, pos.getTurn() == WHITE);
@@ -21,7 +23,8 @@ namespace engine
 
         debug("Nodes:\t" + std::to_string(nodes));
         debug("Time:\t" + std::to_string(elapsedTime) + " ms");
-        debug("NPS:\t" + std::to_string(nodes / elapsedTime) + "k\n");
+        debug("NPS:\t" + std::to_string(nodes / elapsedTime) + "k");
+        debug("Table:\t" + std::to_string((TTtable.size() * sizeof(TTEntry)) / 1000) + " Kb\n");
 
         return result.bestMove;
     }
@@ -33,6 +36,17 @@ namespace engine
         {
             result.eval = evaluate(pos);
             return 1;
+        }
+
+        if (TTtable.contains(pos.getZobristKey()))
+        {
+            TTEntry entry = TTtable.at(pos.getZobristKey());
+            if (entry.depth >= depth)
+            {
+                result.eval = entry.eval;
+                result.bestMove = entry.bestMove;
+                return 1;
+            }
         }
 
         SearchResult newResult;
@@ -76,6 +90,13 @@ namespace engine
             else
                 beta = std::min(beta, result.eval);
         }
+
+        TTEntry entry;
+        entry.bestMove = result.bestMove;
+        entry.eval = result.eval;
+        entry.depth = depth;
+        TTtable.insert(std::make_pair(pos.getZobristKey(), entry));
+
         return count;
     }
 
@@ -89,7 +110,8 @@ namespace engine
         }
         if (captured != NULL_PIECE)
         {
-            eval += 1000 + getPieceEval(captured) - getPieceEval(pos.getPiece(move.getFrom()));
+            Piece piece = pos.getPiece(move.getFrom());
+            eval += 1000 + getPieceEval(typeOf(captured)) - getPieceEval(typeOf(piece));
         }
         return eval;
     }

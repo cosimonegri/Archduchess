@@ -19,9 +19,9 @@ namespace engine
         auto end = std::chrono::steady_clock::now();
         int64_t elapsedTime = getTimeMs(begin, end);
 
-        debug("Nodes evaluated: " + std::to_string(nodes));
-        debug("Time: " + std::to_string(elapsedTime) + "ms");
-        debug("NPS: " + std::to_string(nodes / elapsedTime) + "k\n");
+        debug("Nodes:\t" + std::to_string(nodes));
+        debug("Time:\t" + std::to_string(elapsedTime) + " ms");
+        debug("NPS:\t" + std::to_string(nodes / elapsedTime) + "k\n");
 
         return result.bestMove;
     }

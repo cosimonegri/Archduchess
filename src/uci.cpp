@@ -130,7 +130,7 @@ namespace engine
         int64_t elapsedTime = getTimeMs(begin, end);
 
         std::cout << "\nNodes:\t" << nodes << std::endl;
-        std::cout << "Time:\t" << elapsedTime << "ms" << std::endl;
+        std::cout << "Time:\t" << elapsedTime << " ms" << std::endl;
         std::cout << "NPS:\t" << (nodes / elapsedTime) << "k" << std::endl
                   << std::endl;
     }

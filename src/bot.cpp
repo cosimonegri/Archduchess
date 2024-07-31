@@ -87,6 +87,7 @@ namespace engine
 
     std::string Bot::chooseMove()
     {
+        // todo check move not null
         return moveToUci(searchMan.getBestMove(pos));
     }
 }

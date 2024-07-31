@@ -1,8 +1,8 @@
 #ifndef GENERATOR
 #define GENERATOR
 
-#include "types.hpp"
 #include "position.hpp"
+#include "types.hpp"
 
 namespace engine
 {
@@ -14,8 +14,6 @@ namespace engine
         size_t size;
 
         MoveList() : size{0} {};
-
-        void clear();
     };
 
     void generateMoves(Position &pos, MoveList &moveList);

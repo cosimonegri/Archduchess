@@ -3,11 +3,6 @@
 
 namespace engine
 {
-    void MoveList::clear()
-    {
-        size = 0;
-    }
-
     void generatePromotionMoves(MoveList &moveList, Tile from, Tile to, bool isCapture)
     {
         moveList.moves[moveList.size++] = Move(from, to, isCapture ? QUEEN_PROM_CAPTURE : QUEEN_PROM);

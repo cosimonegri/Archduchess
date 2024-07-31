@@ -64,11 +64,67 @@ namespace engine
             char rankChar = fen.at(index);
             index++;
             enPassant = makeTile(fileChar, rankChar);
-            std::cout << toString(enPassant) << std::endl;
         }
         index++;
 
         // todo finish
+    }
+
+    std::string Position::getFen() const
+    {
+        std::string fen;
+        for (Rank rank = RANK_8; rank >= RANK_1; --rank)
+        {
+            int empty = 0;
+            for (File file = FILE_A; file <= FILE_H; ++file)
+            {
+                Piece piece = getPiece(makeTile(file, rank));
+                if (piece == NULL_PIECE)
+                {
+                    empty++;
+                    continue;
+                }
+                if (empty != 0)
+                {
+                    fen += std::to_string(empty);
+                    empty = 0;
+                }
+                fen += PIECE_TO_CHAR.at(piece);
+            }
+            if (empty != 0)
+                fen += std::to_string(empty);
+            if (rank != RANK_1)
+                fen += FEN_RANKS_DELIMITER;
+        }
+        fen += FEN_DELIMITER;
+
+        fen += COLOR_TO_CHAR.at(getTurn());
+        fen += FEN_DELIMITER;
+
+        for (CastlingRight c : {W_KING_SIDE, W_QUEEN_SIDE, B_KING_SIDE, B_QUEEN_SIDE})
+        {
+            if (hasCastlingRight(c))
+                fen += CASTLING_TO_CHAR.at(c);
+        }
+        if (castling == NULL_CASTLING)
+        {
+            fen += FEN_EMPTY;
+        }
+        fen += FEN_DELIMITER;
+
+        if (enPassant != NULL_TILE)
+        {
+            fen += toString(enPassant);
+        }
+        else
+        {
+            fen += FEN_EMPTY;
+        }
+        fen += FEN_DELIMITER;
+
+        // todo finish
+
+        return fen;
     }
 
     Piece Position::getPiece(Tile tile) const

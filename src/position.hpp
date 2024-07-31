@@ -62,6 +62,13 @@ namespace engine
         {'q', B_QUEEN_SIDE},
     };
 
+    static const std::map<CastlingRight, char> CASTLING_TO_CHAR = {
+        {W_KING_SIDE, 'K'},
+        {W_QUEEN_SIDE, 'Q'},
+        {B_KING_SIDE, 'k'},
+        {B_QUEEN_SIDE, 'q'},
+    };
+
     struct RevertState
     {
         Move move;
@@ -93,6 +100,8 @@ namespace engine
 
     public:
         Position(const std::string &fen);
+
+        std::string getFen() const;
 
         Piece getPiece(Tile tile) const;
         Bitboard getPieces(PieceType pt) const;

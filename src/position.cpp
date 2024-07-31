@@ -6,9 +6,12 @@ namespace engine
 {
     Position::Position(const std::string &fen)
         : typeBB{0, 0, 0, 0, 0, 0, 0}, colorBB{0, 0},
-          castling(NULL_CASTLING), enPassant(NULL_TILE)
+          castling(NULL_CASTLING), enPassant(NULL_TILE),
+          zobristKey(0ULL)
     {
-        init();
+        for (Tile tile = A1; tile <= H8; ++tile)
+            board[tile] = NULL_PIECE;
+
         size_t index = 0;
         int tile = A8;
         while (index < fen.length())
@@ -30,7 +33,10 @@ namespace engine
             }
             else
             {
-                setPiece((Tile)tile, CHAR_TO_PIECE.at(c));
+                Piece piece = CHAR_TO_PIECE.at(c);
+                board[tile] = piece;
+                setBit(typeBB[typeOf(piece)], (Tile)tile);
+                setBit(colorBB[colorOf(piece)], (Tile)tile);
                 tile++;
             };
             index++;
@@ -68,6 +74,8 @@ namespace engine
         index++;
 
         // todo finish
+
+        initZobristKey();
     }
 
     std::string Position::getFen() const
@@ -266,6 +274,7 @@ namespace engine
             newState->castling = castling;
             newState->enPassant = enPassant;
             newState->captured = board[to];
+            newState->zobristKey = zobristKey;
             newState->previous = state;
             state = newState;
         }
@@ -273,24 +282,40 @@ namespace engine
         // remove castling right when the king moves
         if (typeOf(board[from]) == KING)
         {
+            if (turn == WHITE && hasCastlingRight(W_QUEEN_SIDE))
+                zobristKey ^= getCastlingZ(W_QUEEN_SIDE);
+            if (turn == WHITE && hasCastlingRight(W_KING_SIDE))
+                zobristKey ^= getCastlingZ(W_KING_SIDE);
+            if (turn == BLACK && hasCastlingRight(B_QUEEN_SIDE))
+                zobristKey ^= getCastlingZ(B_QUEEN_SIDE);
+            if (turn == BLACK && hasCastlingRight(B_KING_SIDE))
+                zobristKey ^= getCastlingZ(B_KING_SIDE);
             removeCastling(castling, getCastlingRights(turn));
         }
 
         // remove castling right when a rook moves or is captured
         if (from == A1 || to == A1)
         {
+            if (hasCastlingRight(W_QUEEN_SIDE))
+                zobristKey ^= getCastlingZ(W_QUEEN_SIDE);
             removeCastling(castling, W_QUEEN_SIDE);
         }
         if (from == H1 || to == H1)
         {
+            if (hasCastlingRight(W_KING_SIDE))
+                zobristKey ^= getCastlingZ(W_KING_SIDE);
             removeCastling(castling, W_KING_SIDE);
         }
         if (from == A8 || to == A8)
         {
+            if (hasCastlingRight(B_QUEEN_SIDE))
+                zobristKey ^= getCastlingZ(B_QUEEN_SIDE);
             removeCastling(castling, B_QUEEN_SIDE);
         }
         if (from == H8 || to == H8)
         {
+            if (hasCastlingRight(B_KING_SIDE))
+                zobristKey ^= getCastlingZ(B_KING_SIDE);
             removeCastling(castling, B_KING_SIDE);
         }
 
@@ -302,7 +327,12 @@ namespace engine
         setPiece(to, board[from]);
         clearPiece(from);
 
-        enPassant = NULL_TILE;
+        if (enPassant != NULL_TILE)
+        {
+            zobristKey ^= getEnPassantFileZ(enPassant);
+            enPassant = NULL_TILE;
+        }
+
         if (flag == QUIET)
         {
             switchTurn();
@@ -313,6 +343,7 @@ namespace engine
         if (flag == DOUBLE_PUSH)
         {
             enPassant = from + getPawnPushDir(turn);
+            zobristKey ^= getEnPassantFileZ(enPassant);
         }
         else if (flag == EN_PASSANT)
         {
@@ -402,6 +433,7 @@ namespace engine
 
         castling = state->castling;
         enPassant = state->enPassant;
+        zobristKey = state->zobristKey;
         state = state->previous;
     }
 
@@ -431,14 +463,36 @@ namespace engine
                   << std::endl;
     }
 
-    void Position::init()
+    Key Position::getZobristKey() const
+    {
+        return zobristKey;
+    }
+
+    void Position::initZobristKey()
     {
         for (Tile tile = A1; tile <= H8; ++tile)
-            board[tile] = NULL_PIECE;
+        {
+            zobristKey ^= getPieceTileZ(getPiece(tile), tile);
+        }
+        if (turn == BLACK)
+        {
+            zobristKey ^= getTurnZ();
+        }
+        for (CastlingRight c : {W_KING_SIDE, W_QUEEN_SIDE, B_KING_SIDE, B_QUEEN_SIDE})
+        {
+            if (hasCastlingRight(c))
+                zobristKey ^= getCastlingZ(c);
+        }
+        if (getEnPassant() != NULL_TILE)
+        {
+            zobristKey ^= getEnPassantFileZ(enPassant);
+        }
     }
 
     void Position::setPiece(Tile tile, Piece piece)
     {
+        zobristKey ^= getPieceTileZ(board[tile], tile);
+        zobristKey ^= getPieceTileZ(piece, tile);
         board[tile] = piece;
         setBit(typeBB[typeOf(piece)], tile);
         setBit(colorBB[colorOf(piece)], tile);
@@ -447,6 +501,8 @@ namespace engine
     void Position::clearPiece(Tile tile)
     {
         Piece piece = board[tile];
+        zobristKey ^= getPieceTileZ(piece, tile);
+        zobristKey ^= getPieceTileZ(NULL_PIECE, tile);
         board[tile] = NULL_PIECE;
         clearBit(typeBB[typeOf(piece)], tile);
         clearBit(colorBB[colorOf(piece)], tile);
@@ -455,5 +511,6 @@ namespace engine
     void Position::switchTurn()
     {
         turn = ~turn;
+        zobristKey ^= getTurnZ();
     }
 }

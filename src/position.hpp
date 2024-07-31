@@ -4,8 +4,9 @@
 #include <string>
 #include <map>
 #include <stack>
-#include "types.hpp"
 #include "move.hpp"
+#include "zobrist.hpp"
+#include "types.hpp"
 
 namespace engine
 {
@@ -76,6 +77,7 @@ namespace engine
         Tile enPassant;
         Piece captured;
 
+        Key zobristKey;
         RevertState *previous;
     };
 
@@ -91,15 +93,19 @@ namespace engine
         int halfMove;
         int fullMove;
 
+        Key zobristKey;
         RevertState *state;
 
-        void init();
+        void initZobristKey();
+
         void setPiece(Tile tile, Piece piece);
         void clearPiece(Tile tile);
         void switchTurn();
 
     public:
         Position(const std::string &fen);
+        // Position(const Position &) = delete;
+        // Position &operator=(const Position &) = delete;
 
         std::string getFen() const;
 
@@ -126,6 +132,8 @@ namespace engine
 
         void makeTurn(Move move, RevertState *newState = NULL);
         void unmakeTurn();
+
+        Key getZobristKey() const;
         void print();
     };
 }

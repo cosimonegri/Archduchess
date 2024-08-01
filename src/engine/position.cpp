@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include "position.hpp"
 #include "bitboard.hpp"
 
@@ -233,7 +234,7 @@ namespace engine
                                 : getPieces();
         for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
-                        Bitboard pieces = getPieces(pt, C);
+            Bitboard pieces = getPieces(pt, C);
             while (pieces != 0)
             {
                 Tile from = popLsb(pieces);
@@ -266,6 +267,13 @@ namespace engine
                    : (getPawnAttacksBB<WHITE>(tile) & pawns) != 0;
     }
 
+    bool Position::isKingInCheck(Color color) const
+    {
+        Bitboard king = getPieces(KING, color);
+        Tile kingTile = popLsb(king);
+        return isTileAttackedBy(kingTile, ~color);
+    }
+
     void Position::makeTurn(Move move, RevertState *newState)
     {
         Tile from = move.getFrom();
@@ -282,6 +290,13 @@ namespace engine
             newState->previous = state;
             state = newState;
         }
+        // else
+        // {
+        //     if (typeOf(board[from]) == PAWN)
+        //     {
+        //         repetitions.clear();
+        //     }
+        // }
 
         // remove castling right when the king moves
         if (typeOf(board[from]) == KING)
@@ -337,12 +352,6 @@ namespace engine
             enPassant = NULL_TILE;
         }
 
-        if (flag == QUIET)
-        {
-            switchTurn();
-            return;
-        }
-
         // handle other side effects
         if (flag == DOUBLE_PUSH)
         {
@@ -389,6 +398,7 @@ namespace engine
         }
 
         switchTurn();
+        repetitions.push_back(zobristKey);
     }
 
     void Position::unmakeTurn()
@@ -397,6 +407,7 @@ namespace engine
         {
             return;
         }
+        repetitions.pop_back();
         switchTurn();
 
         Tile from = state->move.getFrom();
@@ -441,7 +452,13 @@ namespace engine
         state = state->previous;
     }
 
-    void Position::print()
+    bool Position::isRepeated() const
+    {
+        return repetitions.size() != 0 &&
+               std::count(repetitions.begin(), repetitions.end(), repetitions.back()) >= 3;
+    }
+
+    void Position::print() const
     {
         std::cout << std::endl;
         std::cout << "  +---+---+---+---+---+---+---+---+" << std::endl;

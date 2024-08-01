@@ -26,6 +26,15 @@ namespace engine
         debug("NPS:\t" + std::to_string(nodes / elapsedTime) + "k");
         debug("Table:\t" + std::to_string((TTtable.size() * sizeof(TTEntry)) / 1000) + " Kb\n");
 
+        if (result.bestMove.raw() == 0)
+        {
+            MoveList moveList;
+            generateMoves(pos, moveList);
+            if (moveList.size != 0)
+            {
+                result.bestMove = moveList.moves[0];
+            }
+        }
         return result.bestMove;
     }
 
@@ -49,10 +58,24 @@ namespace engine
             }
         }
 
-        SearchResult newResult;
-        RevertState state;
         MoveList moveList;
         generateMoves(pos, moveList);
+
+        // set evaluation to the worst possible
+        result.eval = maximize ? MIN_EVAL : MAX_EVAL;
+
+        if (moveList.size == 0)
+        {
+            if (pos.isKingInCheck(maximize ? WHITE : BLACK))
+            {
+                result.eval += maximize ? depth : -depth;
+            }
+            else
+            {
+                result.eval = 0;
+            }
+            return 1;
+        }
 
         ExtMoveList extMoveList = ExtMoveList(moveList);
         for (size_t i = 0; i < extMoveList.size; i++)
@@ -61,18 +84,27 @@ namespace engine
         }
         if (extMoveList.size > 1)
         {
+            // todo maybe there should not ba a -1
             std::sort(extMoveList.moves, extMoveList.moves + extMoveList.size - 1, [](const ExtendedMove &a, const ExtendedMove &b)
                       { return a.eval > b.eval; });
         }
 
-        // set evaluation to the worst possible
-        result.eval = maximize ? MIN_EVAL : MAX_EVAL;
-
+        SearchResult newResult;
+        RevertState state;
         uint64_t count = 0;
         for (size_t i = 0; i < extMoveList.size; i++)
         {
             pos.makeTurn(extMoveList.moves[i], &state);
-            count += search(pos, newResult, depth - 1, alpha, beta, !maximize);
+
+            if (pos.isRepeated())
+            {
+                newResult.eval = 0;
+                count += 1;
+            }
+            else
+            {
+                count += search(pos, newResult, depth - 1, alpha, beta, !maximize);
+            }
             pos.unmakeTurn();
 
             if ((maximize && newResult.eval > result.eval) ||

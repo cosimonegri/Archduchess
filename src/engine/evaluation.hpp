@@ -10,10 +10,10 @@ namespace engine
 {
     using Eval = int;
 
-    constexpr Eval MIN_EVAL = std::numeric_limits<int>::min();
-    constexpr Eval MAX_EVAL = std::numeric_limits<int>::max();
+    constexpr Eval MAX_EVAL = 20000;
+    constexpr Eval MIN_EVAL = -MAX_EVAL;
 
-    constexpr Eval pieceEval[7] = {0, 100, 300, 325, 500, 900, 100000000};
+    constexpr Eval pieceEval[7] = {0, 100, 300, 325, 500, 900, 0};
     constexpr Eval colorMult[2] = {1, -1};
 
     // clang-format off

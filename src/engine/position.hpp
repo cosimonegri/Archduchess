@@ -3,7 +3,7 @@
 
 #include <string>
 #include <map>
-#include <stack>
+#include <vector>
 #include "move.hpp"
 #include "zobrist.hpp"
 #include "types.hpp"
@@ -94,6 +94,7 @@ namespace engine
         int fullMove;
 
         Key zobristKey;
+        std::vector<Key> repetitions;
         RevertState *state;
 
         void initZobristKey();
@@ -129,12 +130,14 @@ namespace engine
         Bitboard getAttacksBB(bool excludeKingBlocker = false) const;
         Bitboard getAttacksBB(Color color, bool excludeKingBlocker = false) const;
         bool isTileAttackedBy(Tile tile, Color color) const;
+        bool isKingInCheck(Color color) const;
 
         void makeTurn(Move move, RevertState *newState = NULL);
         void unmakeTurn();
 
         Key getZobristKey() const;
-        void print();
+        bool isRepeated() const;
+        void print() const;
     };
 }
 

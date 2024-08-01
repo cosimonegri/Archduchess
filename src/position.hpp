@@ -126,8 +126,8 @@ namespace engine
         Tile getCastlingKingTo(CastlingRight c) const;
 
         template <Color C>
-        Bitboard getAttacksBB() const;
-        Bitboard getAttacksBB(Color color) const;
+        Bitboard getAttacksBB(bool excludeKingBlocker = false) const;
+        Bitboard getAttacksBB(Color color, bool excludeKingBlocker = false) const;
         bool isTileAttackedBy(Tile tile, Color color) const;
 
         void makeTurn(Move move, RevertState *newState = NULL);

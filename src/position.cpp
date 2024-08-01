@@ -218,7 +218,7 @@ namespace engine
     }
 
     template <Color C>
-    Bitboard Position::getAttacksBB() const
+    Bitboard Position::getAttacksBB(bool excludeKingBlocker) const
     {
         constexpr Direction diagRight = getPawnRightDir(C);
         constexpr Direction diagLeft = getPawnLeftDir(C);
@@ -228,10 +228,12 @@ namespace engine
         attacks |= shiftBB<diagRight>(pawns);
         attacks |= shiftBB<diagLeft>(pawns);
 
+        Bitboard occupied = excludeKingBlocker
+                                ? getPieces() & ~getPieces(KING, ~C)
+                                : getPieces();
         for (PieceType pt : {KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
-            Bitboard occupied = getPieces() & ~getPieces(KING, ~C);
-            Bitboard pieces = getPieces(pt, C);
+                        Bitboard pieces = getPieces(pt, C);
             while (pieces != 0)
             {
                 Tile from = popLsb(pieces);
@@ -241,9 +243,11 @@ namespace engine
         return attacks;
     }
 
-    Bitboard Position::getAttacksBB(Color color) const
+    Bitboard Position::getAttacksBB(Color color, bool excludeKingBlocker) const
     {
-        return color == WHITE ? getAttacksBB<WHITE>() : getAttacksBB<BLACK>();
+        return color == WHITE
+                   ? getAttacksBB<WHITE>(excludeKingBlocker)
+                   : getAttacksBB<BLACK>(excludeKingBlocker);
     }
 
     bool Position::isTileAttackedBy(Tile tile, Color color) const

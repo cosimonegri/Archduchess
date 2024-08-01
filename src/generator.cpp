@@ -111,8 +111,8 @@ namespace engine
     {
         Bitboard king = pos.getPieces(KING, C);
         Tile from = popLsb(king);
-        Bitboard attackedTiles = pos.getAttacksBB(~C);
-        Bitboard attacks = getAttacksBB<KING>(from, pos.getPieces()) & ~pos.getPieces(C) & ~attackedTiles;
+        Bitboard attackedTiles = pos.getAttacksBB(~C, true);
+        Bitboard attacks = getAttacksBB<KING>(from) & ~pos.getPieces(C) & ~attackedTiles;
         while (attacks != 0)
         {
             Tile to = popLsb(attacks);

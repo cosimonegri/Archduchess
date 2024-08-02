@@ -1,6 +1,9 @@
 .vscode
 bin
+build
+resources
 
+todo.txt
 magics.txt
 fens.txt
 log.txt

@@ -19,7 +19,6 @@ namespace engine
         void printPosition();
 
         void runPerft(int depth);
-        static void runPerftTest();
 
     public:
         UCIEngine() = default;

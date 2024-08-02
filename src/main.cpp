@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <cassert>
 #include <time.h>
-#include "uci.hpp"
-#include "zobrist.hpp"
-#include "bitboard.hpp"
+#include "engine/uci.hpp"
+#include "engine/zobrist.hpp"
+#include "engine/bitboard.hpp"
 
 int main()
 {

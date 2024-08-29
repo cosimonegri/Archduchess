@@ -13,11 +13,12 @@ namespace engine
 {
     Move SearchManager::getBestMove(Position &pos)
     {
+        SearchResult result;
+        result.bestMove = Move();
         TTtable.clear();
 
-        SearchResult result;
         auto begin = std::chrono::steady_clock::now();
-        uint64_t nodes = search(pos, result, 6, MIN_EVAL, MAX_EVAL, pos.getTurn() == WHITE);
+        uint64_t nodes = search(pos, result, 6, 0, MIN_EVAL, MAX_EVAL, pos.getTurn() == WHITE);
         auto end = std::chrono::steady_clock::now();
         int64_t elapsedTime = getTimeMs(begin, end);
 
@@ -38,9 +39,15 @@ namespace engine
         return result.bestMove;
     }
 
-    uint64_t SearchManager::search(Position &pos, SearchResult &result,
-                                   int depth, Eval alpha, Eval beta, bool maximize)
+    uint64_t SearchManager::search(Position &pos, SearchResult &result, int depth,
+                                   int ply, Eval alpha, Eval beta, bool maximize)
     {
+        if (pos.isRepeated())
+        {
+            result.eval = 0;
+            return 1;
+        }
+
         if (depth <= 0)
         {
             result.eval = evaluate(pos);
@@ -68,7 +75,7 @@ namespace engine
         {
             if (pos.isKingInCheck(maximize ? WHITE : BLACK))
             {
-                result.eval += maximize ? depth : -depth;
+                result.eval += maximize ? ply : -ply;
             }
             else
             {
@@ -95,16 +102,7 @@ namespace engine
         for (size_t i = 0; i < extMoveList.size; i++)
         {
             pos.makeTurn(extMoveList.moves[i], &state);
-
-            if (pos.isRepeated())
-            {
-                newResult.eval = 0;
-                count += 1;
-            }
-            else
-            {
-                count += search(pos, newResult, depth - 1, alpha, beta, !maximize);
-            }
+            count += search(pos, newResult, depth - 1, ply + 1, alpha, beta, !maximize);
             pos.unmakeTurn();
 
             if ((maximize && newResult.eval > result.eval) ||

@@ -3,7 +3,10 @@
 
 #include <string>
 #include <map>
+#include <thread>
+#include <semaphore>
 #include "search.hpp"
+#include "listeners.hpp"
 #include "position.hpp"
 #include "move.hpp"
 
@@ -22,19 +25,33 @@ namespace engine
 
     std::string moveToUci(Move move);
 
-    class Bot
+    constexpr int MAX_THINK_TIME_MS = 500;
+
+    class Bot : public SearchListener
     {
     private:
-        Position pos;
         SearchManager SM;
+        Position pos;
+
+        MoveListener *listener;
+
+        std::thread thinkThread;
+        std::binary_semaphore thinkSemaphore;
+
+        void runThinkThread();
 
     public:
         Bot();
+        ~Bot();
 
         Position getPosition();
         void setPosition(std::string fen);
         void makeTurn(std::string move);
-        std::string chooseMove();
+        void setListener(MoveListener *listener);
+
+        void startThinking();
+        void stopThinking();
+        void onSearchComplete(Move move) override;
     };
 }
 

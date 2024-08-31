@@ -11,9 +11,36 @@
 
 namespace engine
 {
-    SearchManager::SearchManager() : TT{TranspositionTable()} {}
+    SearchManager::SearchManager() : TT{TranspositionTable()}, cancel{false} {}
 
-    Move SearchManager::getBestMove(Position &pos)
+    void SearchManager::setListener(SearchListener *listener)
+    {
+        this->listener = listener;
+    }
+
+    void SearchManager::setCancel()
+    {
+        cancelMtx.lock();
+        cancel = true;
+        cancelMtx.unlock();
+    }
+
+    void SearchManager::clearCancel()
+    {
+        cancelMtx.lock();
+        cancel = false;
+        cancelMtx.unlock();
+    }
+
+    bool SearchManager::getCancel()
+    {
+        cancelMtx.lock();
+        bool canc = cancel;
+        cancelMtx.unlock();
+        return canc;
+    }
+
+    void SearchManager::startSearch(Position &pos)
     {
         Depth depth = 1;
         uint64_t nodes;
@@ -24,8 +51,7 @@ namespace engine
         while (true)
         {
             nodes = search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, result.bestMove);
-            auto current = std::chrono::steady_clock::now();
-            if (getTimeMs(begin, current) >= 100)
+            if (getCancel())
             {
                 break;
             }
@@ -50,12 +76,19 @@ namespace engine
                 result.bestMove = moveList.moves[0];
             }
         }
-        return result.bestMove;
+
+        listener->onSearchComplete(result.bestMove);
+        clearCancel();
     }
 
     uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,
                                    int ply, Eval alpha, Eval beta, Move bestMove)
     {
+        if (getCancel())
+        {
+            return 0;
+        }
+
         if (pos.isRepeated())
         {
             result.eval = 0;
@@ -138,6 +171,11 @@ namespace engine
             pos.makeTurn(extMoveList.moves[i], &state);
             count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha, Move());
             pos.unmakeTurn();
+
+            if (getCancel())
+            {
+                return 0;
+            }
 
             if (-newResult.eval > result.eval)
             {

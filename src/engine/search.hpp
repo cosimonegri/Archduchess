@@ -1,11 +1,12 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
-#include <unordered_map>
+#include <mutex>
 #include "transposition.hpp"
 #include "evaluation.hpp"
 #include "position.hpp"
 #include "generator.hpp"
+#include "listeners.hpp"
 #include "move.hpp"
 
 namespace engine
@@ -38,6 +39,12 @@ namespace engine
     {
     private:
         TranspositionTable TT;
+        SearchResult result;
+
+        SearchListener *listener;
+
+        bool cancel;
+        std::mutex cancelMtx;
 
         uint64_t search(Position &pos, SearchResult &result, Depth depth,
                         int ply, Eval alpha, Eval beta, Move bestMove);
@@ -46,7 +53,11 @@ namespace engine
     public:
         SearchManager();
 
-        Move getBestMove(Position &pos);
+        void setListener(SearchListener *listener);
+        void setCancel();
+        void clearCancel();
+        bool getCancel();
+        void startSearch(Position &pos);
     };
 }
 

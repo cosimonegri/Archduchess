@@ -4,11 +4,12 @@
 #include <sstream>
 #include <string>
 #include "bot.hpp"
+#include "listeners.hpp"
 #include "types.hpp"
 
 namespace engine
 {
-    class UCIEngine
+    class UCIEngine : public MoveListener
     {
     private:
         Bot bot;
@@ -22,9 +23,10 @@ namespace engine
         void runPerft(Depth depth);
 
     public:
-        UCIEngine() = default;
+        UCIEngine();
 
         void loop();
+        void onMoveChosen(std::string move) override;
     };
 }
 

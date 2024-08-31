@@ -13,6 +13,11 @@
 
 namespace engine
 {
+    UCIEngine::UCIEngine() : bot{Bot()}
+    {
+        bot.setListener(this);
+    }
+
     void UCIEngine::loop()
     {
         std::string command, token;
@@ -107,10 +112,13 @@ namespace engine
         }
         else
         {
-            // todo engine should be able to read input while thinking
-            respond("bestmove " + bot.chooseMove());
-            return;
+            bot.startThinking();
         }
+    }
+
+    void UCIEngine::onMoveChosen(std::string move)
+    {
+        respond("bestmove " + move);
     }
 
     void UCIEngine::printPosition()

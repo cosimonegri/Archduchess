@@ -1,3 +1,4 @@
+#include <thread>
 #include "bot.hpp"
 #include "search.hpp"
 #include "position.hpp"
@@ -13,7 +14,21 @@ namespace engine
         return move.isPromotion() ? uciMove + PROM_TO_CHAR.at(move.getFlag()) : uciMove;
     }
 
-    Bot::Bot() : pos{Position(START_FEN)}, SM{SearchManager()} {};
+    Bot::Bot() : pos{Position(START_FEN)}, SM{SearchManager()}, thinkSemaphore{0}
+    {
+        SM.setListener(this);
+        thinkThread = std::thread(&Bot::runThinkThread, this);
+    };
+
+    Bot::~Bot()
+    {
+        thinkThread.join();
+    };
+
+    void Bot::setListener(MoveListener *listener)
+    {
+        this->listener = listener;
+    }
 
     // todo maybe return a copy
     Position Bot::getPosition()
@@ -85,9 +100,35 @@ namespace engine
         return;
     }
 
-    std::string Bot::chooseMove()
+    void Bot::startThinking()
     {
-        // todo check move not null
-        return moveToUci(SM.getBestMove(pos));
+        thinkSemaphore.release();
+        std::thread cancelThread{
+            [this]
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(MAX_THINK_TIME_MS));
+                this->stopThinking();
+            }};
+        cancelThread.detach();
     }
+
+    void Bot::stopThinking()
+    {
+        SM.setCancel();
+    }
+
+    void Bot::onSearchComplete(Move move)
+    {
+        listener->onMoveChosen(moveToUci(move));
+    }
+
+    void Bot::runThinkThread()
+    {
+        while (true)
+        {
+            thinkSemaphore.acquire();
+            SM.startSearch(pos);
+        }
+    }
+
 }

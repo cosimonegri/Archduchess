@@ -13,7 +13,7 @@ namespace engine
         return move.isPromotion() ? uciMove + PROM_TO_CHAR.at(move.getFlag()) : uciMove;
     }
 
-    Bot::Bot() : pos{Position(START_FEN)} {};
+    Bot::Bot() : pos{Position(START_FEN)}, SM{SearchManager()} {};
 
     // todo maybe return a copy
     Position Bot::getPosition()
@@ -88,6 +88,6 @@ namespace engine
     std::string Bot::chooseMove()
     {
         // todo check move not null
-        return moveToUci(searchMan.getBestMove(pos));
+        return moveToUci(SM.getBestMove(pos));
     }
 }

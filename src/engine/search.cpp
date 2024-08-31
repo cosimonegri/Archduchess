@@ -11,9 +11,11 @@
 
 namespace engine
 {
+    SearchManager::SearchManager() : TT{TranspositionTable()} {}
+
     Move SearchManager::getBestMove(Position &pos)
     {
-        TTtable.clear();
+        TT.clear();
 
         Depth depth = 1;
         bool maximize = pos.getTurn() == WHITE;
@@ -39,7 +41,8 @@ namespace engine
         debug("Nodes:\t" + std::to_string(nodes));
         debug("Time:\t" + std::to_string(elapsedTime) + " ms");
         debug("NPS:\t" + std::to_string(nodes / elapsedTime) + "k");
-        debug("Table:\t" + std::to_string((TTtable.size() * sizeof(TTEntry)) / 1000) + " Kb\n");
+        debug("TT:\t" + std::to_string(TT.getOccupancyRate() * 100) + "% of " +
+              std::to_string(TT_SIZE * sizeof(TTEntry) / 1048576) + " MB\n");
 
         if (result.bestMove.raw() == 0)
         {
@@ -68,17 +71,12 @@ namespace engine
             return 1;
         }
 
-        TTEntry entry;
-        entry.bestMove = Move();
-        if (TTtable.contains(pos.getZobristKey()))
+        TTEntry *entry = TT.get(pos.getZobristKey());
+        if (entry != NULL && entry->depth >= depth)
         {
-            entry = TTtable.at(pos.getZobristKey());
-            if (entry.depth >= depth)
-            {
-                result.eval = entry.eval;
-                result.bestMove = entry.bestMove;
-                return 1;
-            }
+            result.eval = entry->eval;
+            result.bestMove = entry->bestMove;
+            return 1;
         }
 
         MoveList moveList;
@@ -106,7 +104,7 @@ namespace engine
             // maybe no need for bestMove because hashMove is
             extMoveList.moves[i].eval = moveList.moves[i] == bestMove
                                             ? MAX_EVAL
-                                        : moveList.moves[i] == entry.bestMove
+                                        : entry != NULL && moveList.moves[i] == entry->bestMove
                                             ? MAX_EVAL - 10
                                             : evaluateMove(pos, moveList.moves[i]);
         }
@@ -142,12 +140,7 @@ namespace engine
                 beta = std::min(beta, result.eval);
         }
 
-        TTEntry newEntry;
-        newEntry.bestMove = result.bestMove;
-        newEntry.eval = result.eval;
-        newEntry.depth = depth;
-        TTtable.insert(std::make_pair(pos.getZobristKey(), newEntry));
-
+        TT.add(pos.getZobristKey(), depth, result.bestMove, result.eval);
         return count;
     }
 

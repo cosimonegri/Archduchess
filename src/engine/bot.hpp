@@ -26,7 +26,7 @@ namespace engine
     {
     private:
         Position pos;
-        SearchManager searchMan;
+        SearchManager SM;
 
     public:
         Bot();

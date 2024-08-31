@@ -37,13 +37,15 @@ namespace engine
     class SearchManager
     {
     private:
-        std::unordered_map<Key, TTEntry> TTtable;
+        TranspositionTable TT;
 
         uint64_t search(Position &pos, SearchResult &result, Depth depth,
                         int ply, Eval alpha, Eval beta, bool maximize, Move bestMove);
         int evaluateMove(Position &pos, Move &move);
 
     public:
+        SearchManager();
+
         Move getBestMove(Position &pos);
     };
 }

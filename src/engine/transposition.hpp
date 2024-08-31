@@ -11,7 +11,7 @@ namespace engine
     {
         Move bestMove;
         Eval eval;
-        int depth;
+        Depth depth;
     };
 }
 

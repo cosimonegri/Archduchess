@@ -15,7 +15,7 @@ namespace engine
     {
         TTtable.clear();
 
-        int depth = 1;
+        Depth depth = 1;
         bool maximize = pos.getTurn() == WHITE;
         uint64_t nodes;
         SearchResult result;
@@ -53,7 +53,7 @@ namespace engine
         return result.bestMove;
     }
 
-    uint64_t SearchManager::search(Position &pos, SearchResult &result, int depth,
+    uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,
                                    int ply, Eval alpha, Eval beta, bool maximize, Move bestMove)
     {
         if (pos.isRepeated())

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include "bot.hpp"
+#include "types.hpp"
 
 namespace engine
 {
@@ -18,7 +19,7 @@ namespace engine
         void processGo(std::istringstream &iss);
         void printPosition();
 
-        void runPerft(int depth);
+        void runPerft(Depth depth);
 
     public:
         UCIEngine() = default;

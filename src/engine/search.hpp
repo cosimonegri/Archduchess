@@ -39,7 +39,7 @@ namespace engine
     private:
         std::unordered_map<Key, TTEntry> TTtable;
 
-        uint64_t search(Position &pos, SearchResult &result, int depth,
+        uint64_t search(Position &pos, SearchResult &result, Depth depth,
                         int ply, Eval alpha, Eval beta, bool maximize, Move bestMove);
         int evaluateMove(Position &pos, Move &move);
 

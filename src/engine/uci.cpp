@@ -98,7 +98,7 @@ namespace engine
             iss >> token;
             try
             {
-                int depth = std::stoi(token);
+                Depth depth = std::stoi(token);
                 runPerft(depth);
             }
             catch (...)
@@ -118,7 +118,7 @@ namespace engine
         bot.getPosition().print();
     }
 
-    void UCIEngine::runPerft(int depth)
+    void UCIEngine::runPerft(Depth depth)
     {
         Position pos = bot.getPosition();
         auto begin = std::chrono::steady_clock::now();

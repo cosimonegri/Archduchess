@@ -8,8 +8,6 @@
 
 namespace engine
 {
-    using Eval = int;
-
     constexpr Eval MAX_EVAL = 20000;
     constexpr Eval MIN_EVAL = -MAX_EVAL;
 

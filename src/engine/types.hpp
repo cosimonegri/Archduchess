@@ -9,6 +9,12 @@ namespace engine
 {
     using Bitboard = uint64_t;
 
+    using Key = uint64_t;
+
+    using Depth = int8_t;
+
+    using Eval = int16_t;
+
     enum Color
     {
         WHITE,

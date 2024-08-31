@@ -6,8 +6,6 @@
 
 namespace engine
 {
-    using Key = uint64_t;
-
     extern Key pieceTileZ[15][64];
     extern Key castlingZ[16];
     extern Key enPassantFileZ[8];

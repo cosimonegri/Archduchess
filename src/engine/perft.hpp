@@ -5,10 +5,11 @@
 #include <cstdint>
 #include "position.hpp"
 #include "generator.hpp"
+#include "types.hpp"
 
 namespace engine
 {
-    uint64_t perft(Position &pos, int depth, bool root = true)
+    uint64_t perft(Position &pos, Depth depth, bool root = true)
     {
         if (depth <= 0)
         {

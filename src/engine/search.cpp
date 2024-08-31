@@ -13,15 +13,29 @@ namespace engine
 {
     Move SearchManager::getBestMove(Position &pos)
     {
-        SearchResult result;
-        result.bestMove = Move();
         TTtable.clear();
 
+        int depth = 1;
+        bool maximize = pos.getTurn() == WHITE;
+        uint64_t nodes;
+        SearchResult result;
+        result.bestMove = Move();
+
         auto begin = std::chrono::steady_clock::now();
-        uint64_t nodes = search(pos, result, 6, 0, MIN_EVAL, MAX_EVAL, pos.getTurn() == WHITE);
+        while (true)
+        {
+            nodes = search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, maximize, result.bestMove);
+            auto current = std::chrono::steady_clock::now();
+            if (getTimeMs(begin, current) >= 100)
+            {
+                break;
+            }
+            depth += 1;
+        }
         auto end = std::chrono::steady_clock::now();
         int64_t elapsedTime = getTimeMs(begin, end);
 
+        debug("Depth:\t" + std::to_string(depth));
         debug("Nodes:\t" + std::to_string(nodes));
         debug("Time:\t" + std::to_string(elapsedTime) + " ms");
         debug("NPS:\t" + std::to_string(nodes / elapsedTime) + "k");
@@ -40,7 +54,7 @@ namespace engine
     }
 
     uint64_t SearchManager::search(Position &pos, SearchResult &result, int depth,
-                                   int ply, Eval alpha, Eval beta, bool maximize)
+                                   int ply, Eval alpha, Eval beta, bool maximize, Move bestMove)
     {
         if (pos.isRepeated())
         {
@@ -54,9 +68,11 @@ namespace engine
             return 1;
         }
 
+        TTEntry entry;
+        entry.bestMove = Move();
         if (TTtable.contains(pos.getZobristKey()))
         {
-            TTEntry entry = TTtable.at(pos.getZobristKey());
+            entry = TTtable.at(pos.getZobristKey());
             if (entry.depth >= depth)
             {
                 result.eval = entry.eval;
@@ -87,7 +103,12 @@ namespace engine
         ExtMoveList extMoveList = ExtMoveList(moveList);
         for (size_t i = 0; i < extMoveList.size; i++)
         {
-            extMoveList.moves[i].eval = evaluateMove(pos, moveList.moves[i]);
+            // maybe no need for bestMove because hashMove is
+            extMoveList.moves[i].eval = moveList.moves[i] == bestMove
+                                            ? MAX_EVAL
+                                        : moveList.moves[i] == entry.bestMove
+                                            ? MAX_EVAL - 10
+                                            : evaluateMove(pos, moveList.moves[i]);
         }
         if (extMoveList.size > 1)
         {
@@ -102,7 +123,7 @@ namespace engine
         for (size_t i = 0; i < extMoveList.size; i++)
         {
             pos.makeTurn(extMoveList.moves[i], &state);
-            count += search(pos, newResult, depth - 1, ply + 1, alpha, beta, !maximize);
+            count += search(pos, newResult, depth - 1, ply + 1, alpha, beta, !maximize, Move());
             pos.unmakeTurn();
 
             if ((maximize && newResult.eval > result.eval) ||
@@ -121,11 +142,11 @@ namespace engine
                 beta = std::min(beta, result.eval);
         }
 
-        TTEntry entry;
-        entry.bestMove = result.bestMove;
-        entry.eval = result.eval;
-        entry.depth = depth;
-        TTtable.insert(std::make_pair(pos.getZobristKey(), entry));
+        TTEntry newEntry;
+        newEntry.bestMove = result.bestMove;
+        newEntry.eval = result.eval;
+        newEntry.depth = depth;
+        TTtable.insert(std::make_pair(pos.getZobristKey(), newEntry));
 
         return count;
     }

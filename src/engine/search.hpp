@@ -40,7 +40,7 @@ namespace engine
         std::unordered_map<Key, TTEntry> TTtable;
 
         uint64_t search(Position &pos, SearchResult &result, int depth,
-                        int ply, Eval alpha, Eval beta, bool maximize);
+                        int ply, Eval alpha, Eval beta, bool maximize, Move bestMove);
         int evaluateMove(Position &pos, Move &move);
 
     public:

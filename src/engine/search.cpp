@@ -40,17 +40,22 @@ namespace engine
         return canc;
     }
 
+    void SearchManager::clear()
+    {
+        TT.clear();
+    }
+
     void SearchManager::startSearch(Position &pos)
     {
         Depth depth = 1;
-        uint64_t nodes;
+        uint64_t nodes = 0;
         SearchResult result;
         result.bestMove = Move();
 
         auto begin = std::chrono::steady_clock::now();
         while (true)
         {
-            nodes = search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, result.bestMove);
+            nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, result.bestMove);
             if (getCancel())
             {
                 break;
@@ -67,6 +72,7 @@ namespace engine
         debug("TT:\t" + std::to_string(TT.getOccupancyRate() * 100) + "% of " +
               std::to_string(TT_SIZE * sizeof(TTEntry) / 1048576) + " MB\n");
 
+        // todo maybe not necessary
         if (result.bestMove.raw() == 0)
         {
             MoveList moveList;
@@ -156,8 +162,7 @@ namespace engine
         }
         if (extMoveList.size > 1)
         {
-            // todo maybe there should not ba a -1
-            std::sort(extMoveList.moves, extMoveList.moves + extMoveList.size - 1, [](const ExtendedMove &a, const ExtendedMove &b)
+            std::sort(extMoveList.moves, extMoveList.moves + extMoveList.size, [](const ExtendedMove &a, const ExtendedMove &b)
                       { return a.eval > b.eval; });
         }
 
@@ -174,7 +179,7 @@ namespace engine
 
             if (getCancel())
             {
-                return 0;
+                return count;
             }
 
             if (-newResult.eval > result.eval)

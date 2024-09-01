@@ -100,6 +100,11 @@ namespace engine
         return;
     }
 
+    void Bot::startNewGame()
+    {
+        SM.clear();
+    }
+
     void Bot::startThinking()
     {
         thinkSemaphore.release();

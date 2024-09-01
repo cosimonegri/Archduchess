@@ -49,6 +49,7 @@ namespace engine
         void makeTurn(std::string move);
         void setListener(MoveListener *listener);
 
+        void startNewGame();
         void startThinking();
         void stopThinking();
         void onSearchComplete(Move move) override;

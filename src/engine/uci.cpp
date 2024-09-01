@@ -27,7 +27,6 @@ namespace engine
             if (!std::getline(std::cin, command))
                 command = "quit";
 
-            // log(command);
             std::istringstream iss(command);
             token.clear();
             iss >> token;
@@ -39,7 +38,10 @@ namespace engine
                 respond("readyok");
 
             else if (token == "ucinewgame")
+            {
+                bot.startNewGame();
                 continue;
+            }
 
             else if (token == "position")
                 processPosition(iss);

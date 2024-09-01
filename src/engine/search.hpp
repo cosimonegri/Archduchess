@@ -39,8 +39,6 @@ namespace engine
     {
     private:
         TranspositionTable TT;
-        SearchResult result;
-
         SearchListener *listener;
 
         bool cancel;
@@ -57,6 +55,7 @@ namespace engine
         void setCancel();
         void clearCancel();
         bool getCancel();
+        void clear();
         void startSearch(Position &pos);
     };
 }

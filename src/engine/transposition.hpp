@@ -7,14 +7,21 @@
 
 namespace engine
 {
-    constexpr size_t TT_SIZE = 1 << 22;
+    enum NodeType : uint8_t
+    {
+        EXACT,
+        LOWER_BOUND,
+        UPPER_BOUND,
+    };
 
+    constexpr size_t TT_SIZE = 1 << 22;
     constexpr Depth INVALID_DEPTH = -1;
 
     struct TTEntry
     {
         Key key;
         Depth depth;
+        NodeType type;
         Move bestMove;
         Eval eval;
 
@@ -34,7 +41,7 @@ namespace engine
         TranspositionTable();
 
         void clear();
-        void add(Key key, Depth depth, Move bestMove, Eval eval);
+        void add(Key key, Depth depth, NodeType type, Move bestMove, Eval eval);
         TTEntry *get(Key key);
         float getOccupancyRate();
     };

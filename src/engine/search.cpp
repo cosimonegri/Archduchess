@@ -15,8 +15,6 @@ namespace engine
 
     Move SearchManager::getBestMove(Position &pos)
     {
-        TT.clear();
-
         Depth depth = 1;
         uint64_t nodes;
         SearchResult result;
@@ -70,12 +68,31 @@ namespace engine
             return 1;
         }
 
+        Eval originalAlpha = alpha;
         TTEntry *entry = TT.get(pos.getZobristKey());
         if (entry != NULL && entry->depth >= depth)
         {
-            result.eval = entry->eval;
-            result.bestMove = entry->bestMove;
-            return 1;
+            if (entry->type == EXACT)
+            {
+                result.eval = entry->eval;
+                result.bestMove = entry->bestMove;
+                return 1;
+            }
+            else if (entry->type == LOWER_BOUND)
+            {
+                alpha = std::max(alpha, entry->eval);
+            }
+            else if (entry->type == UPPER_BOUND)
+            {
+                beta = std::min(beta, entry->eval);
+            }
+
+            if (alpha >= beta)
+            {
+                result.eval = entry->eval;
+                result.bestMove = entry->bestMove;
+                return 1;
+            }
         }
 
         MoveList moveList;
@@ -133,7 +150,17 @@ namespace engine
                 break;
         }
 
-        TT.add(pos.getZobristKey(), depth, result.bestMove, result.eval);
+        NodeType type = EXACT;
+        if (result.eval >= beta)
+        {
+            type = LOWER_BOUND;
+        }
+        else if (result.eval <= originalAlpha)
+        {
+            type = UPPER_BOUND;
+        }
+        TT.add(pos.getZobristKey(), depth, type, result.bestMove, result.eval);
+
         return count;
     }
 

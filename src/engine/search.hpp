@@ -40,7 +40,7 @@ namespace engine
         TranspositionTable TT;
 
         uint64_t search(Position &pos, SearchResult &result, Depth depth,
-                        int ply, Eval alpha, Eval beta, bool maximize, Move bestMove);
+                        int ply, Eval alpha, Eval beta, Move bestMove);
         int evaluateMove(Position &pos, Move &move);
 
     public:

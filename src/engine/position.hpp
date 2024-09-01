@@ -131,6 +131,7 @@ namespace engine
         Bitboard getAttacksBB(Color color, bool excludeKingBlocker = false) const;
         bool isTileAttackedBy(Tile tile, Color color) const;
         bool isKingInCheck(Color color) const;
+        bool isKingInCheck() const;
 
         void makeTurn(Move move, RevertState *newState = NULL);
         void unmakeTurn();

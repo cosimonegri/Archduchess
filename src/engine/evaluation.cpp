@@ -20,6 +20,7 @@ namespace engine
                 }
             }
         }
-        return eval + (rand() % 5) - 2;
+        Eval distributedEval = eval + (rand() % 5) - 2;
+        return distributedEval * colorMult[pos.getTurn()];
     }
 }

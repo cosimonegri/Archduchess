@@ -274,6 +274,11 @@ namespace engine
         return isTileAttackedBy(kingTile, ~color);
     }
 
+    bool Position::isKingInCheck() const
+    {
+        return isKingInCheck(turn);
+    }
+
     void Position::makeTurn(Move move, RevertState *newState)
     {
         Tile from = move.getFrom();

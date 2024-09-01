@@ -18,7 +18,6 @@ namespace engine
         TT.clear();
 
         Depth depth = 1;
-        bool maximize = pos.getTurn() == WHITE;
         uint64_t nodes;
         SearchResult result;
         result.bestMove = Move();
@@ -26,7 +25,7 @@ namespace engine
         auto begin = std::chrono::steady_clock::now();
         while (true)
         {
-            nodes = search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, maximize, result.bestMove);
+            nodes = search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, result.bestMove);
             auto current = std::chrono::steady_clock::now();
             if (getTimeMs(begin, current) >= 100)
             {
@@ -57,7 +56,7 @@ namespace engine
     }
 
     uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,
-                                   int ply, Eval alpha, Eval beta, bool maximize, Move bestMove)
+                                   int ply, Eval alpha, Eval beta, Move bestMove)
     {
         if (pos.isRepeated())
         {
@@ -82,14 +81,11 @@ namespace engine
         MoveList moveList;
         generateMoves(pos, moveList);
 
-        // set evaluation to the worst possible
-        result.eval = maximize ? MIN_EVAL : MAX_EVAL;
-
         if (moveList.size == 0)
         {
-            if (pos.isKingInCheck(maximize ? WHITE : BLACK))
+            if (pos.isKingInCheck())
             {
-                result.eval += maximize ? ply : -ply;
+                result.eval = MIN_EVAL + ply;
             }
             else
             {
@@ -118,26 +114,23 @@ namespace engine
         SearchResult newResult;
         RevertState state;
         uint64_t count = 0;
+        result.eval = MIN_EVAL;
+
         for (size_t i = 0; i < extMoveList.size; i++)
         {
             pos.makeTurn(extMoveList.moves[i], &state);
-            count += search(pos, newResult, depth - 1, ply + 1, alpha, beta, !maximize, Move());
+            count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha, Move());
             pos.unmakeTurn();
 
-            if ((maximize && newResult.eval > result.eval) ||
-                (!maximize && newResult.eval < result.eval))
+            if (-newResult.eval > result.eval)
             {
-                result.eval = newResult.eval;
+                result.eval = -newResult.eval;
                 result.bestMove = extMoveList.moves[i];
             }
 
+            alpha = std::max(alpha, result.eval);
             if (alpha >= beta)
                 break;
-
-            if (maximize)
-                alpha = std::max(alpha, result.eval);
-            else
-                beta = std::min(beta, result.eval);
         }
 
         TT.add(pos.getZobristKey(), depth, result.bestMove, result.eval);

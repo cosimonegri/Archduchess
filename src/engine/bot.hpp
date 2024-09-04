@@ -25,7 +25,7 @@ namespace engine
 
     std::string moveToUci(Move move);
 
-    constexpr int MAX_THINK_TIME_MS = 500;
+    constexpr int MAX_THINK_TIME_MS = 100;
 
     class Bot : public SearchListener
     {

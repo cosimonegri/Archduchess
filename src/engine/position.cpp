@@ -74,7 +74,31 @@ namespace engine
         }
         index++;
 
-        // todo finish
+        halfMove = 0;
+        while (index < fen.length())
+        {
+            char c = fen.at(index);
+            if (c == FEN_DELIMITER)
+            {
+                index++;
+                break;
+            }
+            halfMove = 10 * halfMove + (c - '0');
+            index++;
+        }
+
+        fullMove = 0;
+        while (index < fen.length())
+        {
+            char c = fen.at(index);
+            if (c == FEN_DELIMITER)
+            {
+                index++;
+                break;
+            }
+            fullMove = 10 * fullMove + (c - '0');
+            index++;
+        }
 
         initZobristKey();
     }
@@ -131,8 +155,10 @@ namespace engine
         }
         fen += FEN_DELIMITER;
 
-        // todo finish
+        fen += std::to_string(halfMove);
+        fen += FEN_DELIMITER;
 
+        fen += std::to_string(fullMove);
         return fen;
     }
 
@@ -183,6 +209,16 @@ namespace engine
     Tile Position::getEnPassant() const
     {
         return enPassant;
+    }
+
+    int Position::getHalfMove() const
+    {
+        return halfMove;
+    }
+
+    int Position::getFullMove() const
+    {
+        return fullMove;
     }
 
     bool Position::hasCastlingRight(CastlingRight c) const
@@ -290,18 +326,27 @@ namespace engine
             newState->move = move;
             newState->castling = castling;
             newState->enPassant = enPassant;
+            newState->halfMove = halfMove;
             newState->captured = board[to];
             newState->zobristKey = zobristKey;
             newState->previous = state;
             state = newState;
         }
-        // else
-        // {
-        //     if (typeOf(board[from]) == PAWN)
-        //     {
-        //         repetitions.clear();
-        //     }
-        // }
+
+        halfMove += 1;
+        if (board[to] != NULL_PIECE || typeOf(board[from]) == PAWN)
+        {
+            if (newState == NULL)
+            {
+                repetitions.clear();
+            }
+            halfMove = 0;
+        }
+
+        if (turn == BLACK)
+        {
+            fullMove += 1;
+        }
 
         // remove castling right when the king moves
         if (typeOf(board[from]) == KING)
@@ -451,15 +496,21 @@ namespace engine
             setPiece(from, makePiece(PAWN, turn));
         }
 
+        if (turn == BLACK)
+        {
+            fullMove -= 1;
+        }
+
         castling = state->castling;
         enPassant = state->enPassant;
+        halfMove = state->halfMove;
         zobristKey = state->zobristKey;
         state = state->previous;
     }
 
     bool Position::isRepeated() const
     {
-        return repetitions.size() != 0 &&
+        return repetitions.size() >= 3 &&
                std::count(repetitions.begin(), repetitions.end(), repetitions.back()) >= 3;
     }
 
@@ -486,6 +537,8 @@ namespace engine
             std::cout << "  +---+---+---+---+---+---+---+---+" << std::endl;
         }
         std::cout << "    a   b   c   d   e   f   g   h  " << std::endl
+                  << std::endl;
+        std::cout << "Fen: " << getFen() << std::endl
                   << std::endl;
     }
 

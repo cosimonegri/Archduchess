@@ -95,7 +95,7 @@ namespace engine
             return 0;
         }
 
-        if (pos.isRepeated())
+        if (pos.getHalfMove() >= 100 || pos.isRepeated())
         {
             result.eval = 0;
             return 1;

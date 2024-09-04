@@ -75,6 +75,7 @@ namespace engine
         Move move;
         CastlingRight castling;
         Tile enPassant;
+        int halfMove;
         Piece captured;
 
         Key zobristKey;
@@ -120,6 +121,8 @@ namespace engine
 
         Color getTurn() const;
         Tile getEnPassant() const;
+        int getHalfMove() const;
+        int getFullMove() const;
 
         bool hasCastlingRight(CastlingRight c) const;
         bool castlingPathFree(CastlingRight c) const;

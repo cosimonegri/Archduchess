@@ -13,23 +13,25 @@ namespace engine
 {
     constexpr Depth MAX_DEPTH = 100;
 
+    constexpr int TT_SCORE = 1000000000;
+    constexpr int PROM_SCORE = 100000000;
+    constexpr int KILLER_SCORE_A = 8000000;
+    constexpr int KILLER_SCORE_B = 5000000;
+
     // victim - attacker
     constexpr int MVV_LVA[7][7] = {
         {0, 0, 0, 0, 0, 0, 0},
-        {0, 15, 14, 13, 12, 11, 10}, // P->P, N->P, B->P, R->P, Q->P, K->P
-        {0, 25, 24, 23, 22, 21, 20}, // P->N, N->N, B->N, R->N, Q->N, K->N
-        {0, 35, 34, 33, 32, 31, 30}, // P->B, N->B, B->B, R->B, Q->B, K->B
-        {0, 45, 44, 43, 42, 41, 40}, // P->R, N->R, B->R, R->R, Q->R, K->R
-        {0, 55, 54, 53, 52, 51, 50}, // P->P, N->P, B->P, R->P, Q->P, K->P
+        {0, 15000000, 14000000, 13000000, 12000000, 11000000, 10000000}, // P->P, N->P, B->P, R->P, Q->P, K->P
+        {0, 25000000, 24000000, 23000000, 22000000, 21000000, 20000000}, // P->N, N->N, B->N, R->N, Q->N, K->N
+        {0, 35000000, 34000000, 33000000, 32000000, 31000000, 30000000}, // P->B, N->B, B->B, R->B, Q->B, K->B
+        {0, 45000000, 44000000, 43000000, 42000000, 41000000, 40000000}, // P->R, N->R, B->R, R->R, Q->R, K->R
+        {0, 55000000, 54000000, 53000000, 52000000, 51000000, 50000000}, // P->P, N->P, B->P, R->P, Q->P, K->P
         {0, 0, 0, 0, 0, 0, 0},
     };
 
-    constexpr int KILLER_SCORE_A = 8;
-    constexpr int KILLER_SCORE_B = 5;
-
     struct ExtendedMove : Move
     {
-        int eval;
+        int score;
         void operator=(Move m) { data = m.raw(); }
     };
 
@@ -80,7 +82,6 @@ namespace engine
         {
             return move == moveA;
         }
-
         bool matchB(Move move)
         {
             return move == moveB;
@@ -92,6 +93,7 @@ namespace engine
     private:
         TranspositionTable TT;
         Killers killers[MAX_DEPTH + 1];
+        int history[2][64][64];
         uint64_t cutOffs;
         uint64_t ttAccesses;
         uint64_t ttHits;

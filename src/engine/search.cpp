@@ -49,6 +49,10 @@ namespace engine
             killers[i].add(Move());
             killers[i].add(Move());
         }
+        for (Color color : {WHITE, BLACK})
+            for (Tile from = A1; from <= H8; ++from)
+                for (Tile to = A1; to <= H8; ++to)
+                    history[color][from][to] = 0;
         cutOffs = 0;
         ttAccesses = 0;
         ttHits = 0;
@@ -178,11 +182,11 @@ namespace engine
         for (size_t i = 0; i < extMoveList.size; i++)
         {
             // maybe no need for bestMove because hashMove is
-            extMoveList.moves[i].eval = moveList.moves[i] == bestMove
-                                            ? MAX_EVAL
-                                        : entry != NULL && moveList.moves[i] == entry->bestMove
-                                            ? MAX_EVAL - 10
-                                            : scoreMove(pos, moveList.moves[i], killers[ply]);
+            extMoveList.moves[i].score = moveList.moves[i] == bestMove
+                                             ? TT_SCORE
+                                         : entry != NULL && moveList.moves[i] == entry->bestMove
+                                             ? TT_SCORE
+                                             : scoreMove(pos, moveList.moves[i], killers[ply]);
         }
 
         SearchResult newResult;
@@ -195,7 +199,7 @@ namespace engine
             size_t moveIndex = 0;
             for (size_t j = 1; j < extMoveList.size; j++)
             {
-                if (extMoveList.moves[j].eval > extMoveList.moves[moveIndex].eval)
+                if (extMoveList.moves[j].score > extMoveList.moves[moveIndex].score)
                     moveIndex = j;
             }
             Move move = extMoveList.moves[moveIndex];
@@ -222,6 +226,7 @@ namespace engine
                 if (pos.getPiece(move.getTo()) == NULL_PIECE)
                 {
                     killers[ply].add(move);
+                    history[pos.getTurn()][move.getFrom()][move.getTo()] += depth * depth;
                 }
                 goto exit;
             }
@@ -252,16 +257,20 @@ namespace engine
         Piece captured = pos.getPiece(move.getTo());
         if (move.isPromotion())
         {
-            score += 100;
+            score += PROM_SCORE;
         }
         score += MVV_LVA[typeOf(captured)][typeOf(piece)];
-        if (k.matchA(move))
+        if (captured == NULL_PIECE)
         {
-            score += KILLER_SCORE_A;
-        }
-        else if (k.matchB(move))
-        {
-            score += KILLER_SCORE_B;
+            if (k.matchA(move))
+            {
+                score += KILLER_SCORE_A;
+            }
+            else if (k.matchB(move))
+            {
+                score += KILLER_SCORE_B;
+            }
+            score += history[pos.getTurn()][move.getFrom()][move.getTo()];
         }
         return score;
     }

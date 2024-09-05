@@ -53,6 +53,8 @@ namespace engine
         void startNewGame();
         void startThinking();
         void stopThinking();
+        void onSearchInfo(Depth depth, uint64_t nodes, uint64_t timeMs,
+                          float ttOccupancy) override;
         void onSearchComplete(Move move) override;
     };
 }

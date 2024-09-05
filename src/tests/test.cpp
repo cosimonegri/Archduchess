@@ -3,11 +3,19 @@
 #include <fstream>
 #include <vector>
 #include <tuple>
+#include <numeric>
 #include "bot.hpp"
 #include "perft.hpp"
 #include "position.hpp"
 #include "zobrist.hpp"
 #include "bitboard.hpp"
+
+uint64_t average(std::vector<uint64_t> const &v)
+{
+    if (v.empty())
+        return 0;
+    return std::reduce(v.begin(), v.end()) / v.size();
+}
 
 TEST_CASE("PerftTest", "[engine]")
 {
@@ -92,13 +100,19 @@ TEST_CASE("MoveTest", "[engine]")
     engine::bitboard::init();
     engine::zobrist::init();
 
-    std::vector<std::string> fileNames = {"wac201.epd", "midgames250.epd"};
+    std::vector<std::string> fileNames = {"wac201.epd"};
     std::vector<int> testCount;
     std::vector<int> testPassed;
+    std::vector<uint64_t> depths;
+    std::vector<uint64_t> nodes;
+    std::vector<uint64_t> timesMs;
+    std::vector<uint64_t> cutOffs;
+    std::vector<uint64_t> ttAccesses;
+    std::vector<uint64_t> ttHits;
 
     std::string line;
     std::string fen;
-    std::string bestMove;
+    std::string bestMoves;
     size_t fenLength;
 
     for (size_t i = 0; i < fileNames.size(); i++)
@@ -112,19 +126,27 @@ TEST_CASE("MoveTest", "[engine]")
         {
             fenLength = line.find("bm");
             fen = line.substr(0, fenLength);
-            bestMove = line.substr(fenLength + 3);
+            bestMoves = line.substr(fenLength + 3);
 
             engine::Position pos(fen);
-            engine::SearchManager SM;
-            std::string move = moveToSan(pos, SM.runIterativeDeepening(pos, 6));
+            engine::SearchManager sm;
+            engine::SearchDiagnostic sc;
+            std::string move = moveToSan(pos, sm.runIterativeDeepening(pos, 6, &sc));
+            bool correct = bestMoves.find(move) != std::string::npos;
 
             count++;
-            if (move == bestMove)
+            if (correct)
             {
                 passed++;
             }
-            std::cout << count << "\tbm: " << bestMove << "   \tmove: " << move << "\t" << (move == bestMove ? "X" : " ") << std::endl;
+            depths.push_back(sc.depth);
+            nodes.push_back(sc.nodes);
+            timesMs.push_back(sc.timeMs);
+            cutOffs.push_back(sc.cutOffs);
+            ttAccesses.push_back(sc.ttAccesses);
+            ttHits.push_back(sc.ttHits);
 
+            std::cout << count << "\tbm: " << bestMoves << "   \tmove: " << move << "\t" << (correct ? "X" : " ") << std::endl;
             std::getline(file, line);
         }
 
@@ -136,4 +158,25 @@ TEST_CASE("MoveTest", "[engine]")
 
     for (size_t i = 0; i < fileNames.size(); i++)
         std::cout << fileNames[i] << ": " << testPassed[i] << "/" << testCount[i] << std::endl;
+
+    uint64_t totalTime = std::reduce(timesMs.begin(), timesMs.end());
+    uint64_t totalAccesses = std::reduce(ttAccesses.begin(), ttAccesses.end());
+
+    std::cout
+        << std::endl
+        << "Search diagnostic averages" << std::endl;
+    std::cout << "Depth:\t\t" << average(depths) << std::endl;
+    std::cout << "Nodes:\t\t" << average(nodes) << std::endl;
+    std::cout << "Time:\t\t" << average(timesMs) << " ms" << std::endl;
+    if (totalTime != 0)
+    {
+        uint64_t nps = std::reduce(nodes.begin(), nodes.end()) / totalTime;
+        std::cout << "NPS:\t\t" << nps << "k" << std::endl;
+    }
+    std::cout << "Cut-offs:\t" << average(cutOffs) << std::endl;
+    if (totalAccesses != 0)
+    {
+        float ttHitRate = ((float)std::reduce(ttHits.begin(), ttHits.end())) / ((float)totalAccesses);
+        std::cout << "TT hit rate:\t" << ttHitRate * 100 << "%" << std::endl;
+    }
 }

@@ -8,6 +8,11 @@ namespace engine
         clear();
     }
 
+    TranspositionTable::~TranspositionTable()
+    {
+        delete[] entries;
+    }
+
     void TranspositionTable::clear()
     {
         for (size_t i = 0; i < TT_SIZE; i++)

@@ -37,10 +37,25 @@ namespace engine
         Eval eval;
     };
 
+    struct SearchDiagnostic
+    {
+        Depth depth;
+        uint64_t nodes;
+        uint64_t timeMs;
+        uint64_t cutOffs;
+        uint64_t ttAccesses;
+        uint64_t ttHits;
+        float ttOccupancy;
+    };
+
     class SearchManager
     {
     private:
         TranspositionTable TT;
+        uint64_t cutOffs;
+        uint64_t ttAccesses;
+        uint64_t ttHits;
+
         SearchListener *listener;
 
         bool cancel;
@@ -59,7 +74,8 @@ namespace engine
         bool getCancel();
         void clear();
         void startSearch(Position &pos);
-        Move runIterativeDeepening(Position &pos, Depth maxDepth = MAX_DEPTH);
+        Move runIterativeDeepening(Position &pos, Depth maxDepth = MAX_DEPTH,
+                                   SearchDiagnostic *sc = NULL);
     };
 }
 

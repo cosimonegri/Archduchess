@@ -39,6 +39,7 @@ namespace engine
 
     public:
         TranspositionTable();
+        ~TranspositionTable();
 
         void clear();
         void add(Key key, Depth depth, NodeType type, Move bestMove, Eval eval);

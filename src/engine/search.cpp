@@ -11,7 +11,7 @@
 
 namespace engine
 {
-    SearchManager::SearchManager() : TT{TranspositionTable()}, cancel{false} {}
+    SearchManager::SearchManager() : TT{TranspositionTable()}, listener{NULL}, cancel{false} {}
 
     void SearchManager::setListener(SearchListener *listener)
     {
@@ -52,30 +52,51 @@ namespace engine
         clearCancel();
     }
 
-    Move SearchManager::runIterativeDeepening(Position &pos, Depth maxDepth)
+    Move SearchManager::runIterativeDeepening(Position &pos, Depth maxDepth, SearchDiagnostic *sc)
     {
+        // todo maybe don't clear in the future
+        TT.clear();
+        cutOffs = 0;
+        ttAccesses = 0;
+        ttHits = 0;
+
         Depth depth = 1;
         uint64_t nodes = 0;
         SearchResult result;
         result.bestMove = Move();
 
         auto begin = std::chrono::steady_clock::now();
-        while (depth <= maxDepth)
+        while (true)
         {
             nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, result.bestMove);
-            if (getCancel())
+            auto time = getTimeMs(begin, std::chrono::steady_clock::now());
+            if (listener != NULL)
+            {
+                listener->onSearchInfo(depth, nodes, time, TT.getOccupancyRate());
+            }
+            if (depth >= maxDepth || getCancel())
             {
                 break;
             }
             depth += 1;
         }
-        auto end = std::chrono::steady_clock::now();
-        int64_t elapsedTime = getTimeMs(begin, end);
+        int64_t totalTime = getTimeMs(begin, std::chrono::steady_clock::now());
+
+        if (sc != NULL)
+        {
+            sc->depth = depth;
+            sc->nodes = nodes;
+            sc->timeMs = totalTime;
+            sc->cutOffs = cutOffs;
+            sc->ttAccesses = ttAccesses;
+            sc->ttHits = ttHits;
+            sc->ttOccupancy = TT.getOccupancyRate();
+        }
 
         debug("Depth:\t" + std::to_string(depth));
         debug("Nodes:\t" + std::to_string(nodes));
-        debug("Time:\t" + std::to_string(elapsedTime) + " ms");
-        debug("NPS:\t" + std::to_string(nodes / elapsedTime) + "k");
+        debug("Time:\t" + std::to_string(totalTime) + " ms");
+        debug("NPS:\t" + std::to_string(nodes / totalTime) + "k");
         debug("TT:\t" + std::to_string(TT.getOccupancyRate() * 100) + "% of " +
               std::to_string(TT_SIZE * sizeof(TTEntry) / 1048576) + " MB\n");
 
@@ -104,8 +125,10 @@ namespace engine
 
         Eval originalAlpha = alpha;
         TTEntry *entry = TT.get(pos.getZobristKey());
+        ttAccesses++;
         if (entry != NULL && entry->depth >= depth)
         {
+            ttHits++;
             if (entry->type == EXACT)
             {
                 result.eval = entry->eval;
@@ -185,7 +208,10 @@ namespace engine
 
             alpha = std::max(alpha, result.eval);
             if (alpha >= beta)
+            {
+                cutOffs++;
                 break;
+            }
         }
 
         NodeType type = EXACT;

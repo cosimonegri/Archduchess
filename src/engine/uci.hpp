@@ -26,6 +26,8 @@ namespace engine
         UCIEngine();
 
         void loop();
+        void onReceiveInfo(Depth depth, uint64_t nodes, uint64_t timeMs,
+                           float ttOccupancy) override;
         void onMoveChosen(std::string move) override;
     };
 }

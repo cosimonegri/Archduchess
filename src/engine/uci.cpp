@@ -118,6 +118,15 @@ namespace engine
         }
     }
 
+    void UCIEngine::onReceiveInfo(Depth depth, uint64_t nodes, uint64_t timeMs, float ttOccupancy)
+    {
+        timeMs = std::max(1ull, timeMs);
+        uint64_t nps = nodes / timeMs * 1000;
+        int hashfull = ttOccupancy * 1000;
+        respond(std::vformat("info depth {} nodes {} nps {} hashfull {} time {} ",
+                             std::make_format_args(depth, nodes, nps, hashfull, timeMs)));
+    }
+
     void UCIEngine::onMoveChosen(std::string move)
     {
         respond("bestmove " + move);

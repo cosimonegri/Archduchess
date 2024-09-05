@@ -8,23 +8,25 @@
 
 namespace engine
 {
+    // clang-format off
     enum MoveFlag
     {
-        QUIET,
-        DOUBLE_PUSH,
-        KING_CASTLE,
-        QUEEN_CASTLE,
-        CAPTURE,
-        EN_PASSANT,
-        KNIGHT_PROM = 8,
-        BISHOP_PROM,
-        ROOK_PROM,
-        QUEEN_PROM,
-        KNIGHT_PROM_CAPTURE,
-        BISHOP_PROM_CAPTURE,
-        ROOK_PROM_CAPTURE,
-        QUEEN_PROM_CAPTURE,
+        QUIET,                  // 0000
+        DOUBLE_PUSH,            // 0001
+        KING_CASTLE,            // 0010
+        QUEEN_CASTLE,           // 0011
+        CAPTURE,                // 0100
+        EN_PASSANT,             // 0101
+        KNIGHT_PROM = 8,        // 1000
+        BISHOP_PROM,            // 1001
+        ROOK_PROM,              // 1010
+        QUEEN_PROM,             // 1011
+        KNIGHT_PROM_CAPTURE,    // 1100
+        BISHOP_PROM_CAPTURE,    // 1101
+        ROOK_PROM_CAPTURE,      // 1110
+        QUEEN_PROM_CAPTURE,     // 1111
     };
+    // clang-format on
 
     constexpr int captureMask = CAPTURE << 12;
     constexpr int promotionMask = KNIGHT_PROM << 12;

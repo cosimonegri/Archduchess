@@ -34,7 +34,7 @@ namespace engine
         while (pushes)
         {
             Tile to = popLsb(pushes);
-            moveList.moves[moveList.size++] = Move(to - pushDir, to);
+            moveList.moves[moveList.size++] = Move(to - pushDir, to, QUIET);
         }
         while (doublePushes)
         {
@@ -100,7 +100,8 @@ namespace engine
             while (attacks != 0)
             {
                 Tile to = popLsb(attacks);
-                moveList.moves[moveList.size++] = Move(from, to);
+                bool isCapture = pos.getPiece(to) == NULL_PIECE;
+                moveList.moves[moveList.size++] = Move(from, to, isCapture ? CAPTURE : QUIET);
             }
         }
     }
@@ -116,7 +117,8 @@ namespace engine
         while (attacks != 0)
         {
             Tile to = popLsb(attacks);
-            moveList.moves[moveList.size++] = Move(from, to);
+            bool isCapture = pos.getPiece(to) == NULL_PIECE;
+            moveList.moves[moveList.size++] = Move(from, to, isCapture ? CAPTURE : QUIET);
         }
 
         CastlingRight kingSide = C == WHITE ? W_KING_SIDE : B_KING_SIDE;

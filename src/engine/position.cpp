@@ -8,7 +8,7 @@ namespace engine
     Position::Position(const std::string &fen)
         : typeBB{0, 0, 0, 0, 0, 0, 0}, colorBB{0, 0},
           castling(NULL_CASTLING), enPassant(NULL_TILE),
-          zobristKey(0ULL)
+          zobristKey(0ULL), state{NULL}
     {
         for (Tile tile = A1; tile <= H8; ++tile)
             board[tile] = NULL_PIECE;

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <chrono>
 #include <cassert>
@@ -43,6 +44,14 @@ namespace engine
     void SearchManager::clear()
     {
         TT.clear();
+        for (size_t i = 0; i << std::size(killers); i++)
+        {
+            killers[i].add(Move());
+            killers[i].add(Move());
+        }
+        cutOffs = 0;
+        ttAccesses = 0;
+        ttHits = 0;
     }
 
     void SearchManager::startSearch(Position &pos)
@@ -55,10 +64,7 @@ namespace engine
     Move SearchManager::runIterativeDeepening(Position &pos, Depth maxDepth, SearchDiagnostic *sc)
     {
         // todo maybe don't clear in the future
-        TT.clear();
-        cutOffs = 0;
-        ttAccesses = 0;
-        ttHits = 0;
+        clear();
 
         Depth depth = 1;
         uint64_t nodes = 0;
@@ -176,12 +182,7 @@ namespace engine
                                             ? MAX_EVAL
                                         : entry != NULL && moveList.moves[i] == entry->bestMove
                                             ? MAX_EVAL - 10
-                                            : evaluateMove(pos, moveList.moves[i]);
-        }
-        if (extMoveList.size > 1)
-        {
-            std::sort(extMoveList.moves, extMoveList.moves + extMoveList.size, [](const ExtendedMove &a, const ExtendedMove &b)
-                      { return a.eval > b.eval; });
+                                            : scoreMove(pos, moveList.moves[i], killers[ply]);
         }
 
         SearchResult newResult;
@@ -189,9 +190,16 @@ namespace engine
         uint64_t count = 0;
         result.eval = MIN_EVAL;
 
-        for (size_t i = 0; i < extMoveList.size; i++)
+        while (extMoveList.size > 0)
         {
-            pos.makeTurn(extMoveList.moves[i], &state);
+            size_t moveIndex = 0;
+            for (size_t j = 1; j < extMoveList.size; j++)
+            {
+                if (extMoveList.moves[j].eval > extMoveList.moves[moveIndex].eval)
+                    moveIndex = j;
+            }
+            Move move = extMoveList.moves[moveIndex];
+            pos.makeTurn(move, &state);
             count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha, Move());
             pos.unmakeTurn();
 
@@ -200,20 +208,29 @@ namespace engine
                 return count;
             }
 
-            if (-newResult.eval > result.eval)
+            Eval newEval = -newResult.eval;
+            if (newEval > result.eval)
             {
-                result.eval = -newResult.eval;
-                result.bestMove = extMoveList.moves[i];
+                result.eval = newEval;
+                result.bestMove = move;
             }
 
             alpha = std::max(alpha, result.eval);
             if (alpha >= beta)
             {
                 cutOffs++;
-                break;
+                if (pos.getPiece(move.getTo()) == NULL_PIECE)
+                {
+                    killers[ply].add(move);
+                }
+                goto exit;
             }
+
+            extMoveList.moves[moveIndex] = extMoveList.moves[extMoveList.size - 1];
+            extMoveList.size--;
         }
 
+    exit:
         NodeType type = EXACT;
         if (result.eval >= beta)
         {
@@ -228,19 +245,24 @@ namespace engine
         return count;
     }
 
-    int SearchManager::evaluateMove(Position &pos, Move &move)
+    int SearchManager::scoreMove(Position &pos, Move &move, Killers &k)
     {
-        int eval = 0;
+        int score = 0;
+        Piece piece = pos.getPiece(move.getFrom());
         Piece captured = pos.getPiece(move.getTo());
         if (move.isPromotion())
         {
-            eval += 2000;
+            score += 100;
         }
-        if (captured != NULL_PIECE)
+        score += MVV_LVA[typeOf(captured)][typeOf(piece)];
+        if (k.matchA(move))
         {
-            Piece piece = pos.getPiece(move.getFrom());
-            eval += 1000 + getPieceEval(typeOf(captured)) - getPieceEval(typeOf(piece));
+            score += KILLER_SCORE_A;
         }
-        return eval;
+        else if (k.matchB(move))
+        {
+            score += KILLER_SCORE_B;
+        }
+        return score;
     }
 }

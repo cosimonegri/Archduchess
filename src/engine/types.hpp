@@ -168,9 +168,19 @@ namespace engine
         return makeTile(File(file - 'a'), Rank(rank - '1'));
     }
 
+    inline char toString(File file)
+    {
+        return (char)('a' + file);
+    }
+
+    inline std::string toString(Rank rank)
+    {
+        return std::to_string(rank + 1);
+    }
+
     inline std::string toString(Tile tile)
     {
-        return (char)('a' + fileOf(tile)) + std::to_string(rankOf(tile) + 1);
+        return toString(fileOf(tile)) + toString(rankOf(tile));
     }
 
 #define ENABLE_INCR_OPERATORS_ON(T)                          \

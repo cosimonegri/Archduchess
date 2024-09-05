@@ -11,6 +11,8 @@
 
 namespace engine
 {
+    constexpr Depth MAX_DEPTH = 100;
+
     struct ExtendedMove : Move
     {
         int eval;
@@ -57,6 +59,7 @@ namespace engine
         bool getCancel();
         void clear();
         void startSearch(Position &pos);
+        Move runIterativeDeepening(Position &pos, Depth maxDepth = MAX_DEPTH);
     };
 }
 

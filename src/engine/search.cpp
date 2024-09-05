@@ -47,13 +47,20 @@ namespace engine
 
     void SearchManager::startSearch(Position &pos)
     {
+        Move bestMove = runIterativeDeepening(pos);
+        listener->onSearchComplete(bestMove);
+        clearCancel();
+    }
+
+    Move SearchManager::runIterativeDeepening(Position &pos, Depth maxDepth)
+    {
         Depth depth = 1;
         uint64_t nodes = 0;
         SearchResult result;
         result.bestMove = Move();
 
         auto begin = std::chrono::steady_clock::now();
-        while (true)
+        while (depth <= maxDepth)
         {
             nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, result.bestMove);
             if (getCancel())
@@ -72,19 +79,7 @@ namespace engine
         debug("TT:\t" + std::to_string(TT.getOccupancyRate() * 100) + "% of " +
               std::to_string(TT_SIZE * sizeof(TTEntry) / 1048576) + " MB\n");
 
-        // todo maybe not necessary
-        if (result.bestMove.raw() == 0)
-        {
-            MoveList moveList;
-            generateMoves(pos, moveList);
-            if (moveList.size != 0)
-            {
-                result.bestMove = moveList.moves[0];
-            }
-        }
-
-        listener->onSearchComplete(result.bestMove);
-        clearCancel();
+        return result.bestMove;
     }
 
     uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,

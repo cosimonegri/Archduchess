@@ -24,14 +24,15 @@ namespace engine
     };
 
     std::string moveToUci(Move move);
+    std::string moveToSan(Position &pos, Move move);
 
     constexpr int MAX_THINK_TIME_MS = 100;
 
     class Bot : public SearchListener
     {
     private:
-        SearchManager SM;
         Position pos;
+        SearchManager SM;
 
         MoveListener *listener;
 

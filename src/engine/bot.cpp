@@ -1,9 +1,11 @@
+#include <string>
 #include <thread>
 #include "bot.hpp"
 #include "search.hpp"
 #include "position.hpp"
 #include "generator.hpp"
 #include "move.hpp"
+#include "bitboard.hpp"
 #include "types.hpp"
 
 namespace engine
@@ -12,6 +14,82 @@ namespace engine
     {
         std::string uciMove = toString(move.getFrom()) + toString(move.getTo());
         return move.isPromotion() ? uciMove + PROM_TO_CHAR.at(move.getFlag()) : uciMove;
+    }
+
+    std::string moveToSan(Position &pos, Move move)
+    {
+        if (move.raw() == 0)
+            return "--";
+
+        // castling
+        if (move.getFlag() == KING_CASTLE)
+            return "0-0";
+        if (move.getFlag() == QUEEN_CASTLE)
+            return "0-0-0";
+
+        Piece piece = pos.getPiece(move.getFrom());
+        assert(piece != NULL_PIECE);
+        std::string san;
+
+        if (typeOf(piece) != PAWN)
+        {
+            // moving piece
+            san += std::toupper(PIECE_TO_CHAR.at(piece));
+
+            // disambiguate
+            Bitboard others = 0;
+            MoveList moveList;
+            generateMoves(pos, moveList);
+            for (size_t i = 0; i < moveList.size; i++)
+            {
+                Move otherMove = moveList.moves[i];
+                Piece otherPiece = pos.getPiece(otherMove.getFrom());
+                if (typeOf(otherPiece) == typeOf(piece) &&
+                    otherMove.getTo() == move.getTo() &&
+                    otherMove.getFrom() != move.getFrom())
+                {
+                    others |= tileBB(otherMove.getFrom());
+                }
+            }
+            bool sameFile = others & fileBB(fileOf(move.getFrom()));
+            bool sameRank = others & rankBB(rankOf(move.getFrom()));
+            if (!sameFile && sameRank)
+                san += toString(fileOf(move.getFrom()));
+            else if (sameFile && !sameRank)
+                san += toString(rankOf(move.getFrom()));
+            else if (sameFile && sameRank)
+                san += toString(move.getFrom());
+        }
+
+        // capture
+        if (pos.getPiece(move.getTo()) != NULL_PIECE)
+        {
+            if (typeOf(piece) == PAWN)
+            {
+                san += toString(fileOf(move.getFrom()));
+            }
+            san += 'x';
+        }
+
+        // target tile
+        san += toString(move.getTo());
+
+        // promotion
+        if (move.isPromotion())
+        {
+            san += std::toupper(PROM_TO_CHAR.at(move.getFlag()));
+        }
+
+        // check
+        RevertState state;
+        pos.makeTurn(move, &state);
+        if (pos.isKingInCheck())
+        {
+            san += '+';
+        }
+        pos.unmakeTurn();
+
+        return san;
     }
 
     Bot::Bot() : pos{Position(START_FEN)}, SM{SearchManager()}, thinkSemaphore{0}

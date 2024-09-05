@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
+#include <fstream>
 #include <vector>
 #include <tuple>
 #include "bot.hpp"
@@ -57,7 +59,7 @@ TEST_CASE("PerftTest", "[engine]")
     }
 }
 
-TEST_CASE("BotTest", "[engine]")
+TEST_CASE("MateTest", "[engine]")
 {
     engine::bitboard::init();
     engine::zobrist::init();
@@ -79,8 +81,59 @@ TEST_CASE("BotTest", "[engine]")
         std::string move;
         std::tie(fen, move) = testCase;
 
-        engine::Bot bot;
-        bot.setPosition(fen);
-        // REQUIRE(bot.chooseMove() == move);
+        engine::Position pos(fen);
+        engine::SearchManager SM;
+        REQUIRE(moveToUci(SM.runIterativeDeepening(pos, 7)) == move);
     }
+}
+
+TEST_CASE("MoveTest", "[engine]")
+{
+    engine::bitboard::init();
+    engine::zobrist::init();
+
+    std::vector<std::string> fileNames = {"wac201.epd", "midgames250.epd"};
+    std::vector<int> testCount;
+    std::vector<int> testPassed;
+
+    std::string line;
+    std::string fen;
+    std::string bestMove;
+    size_t fenLength;
+
+    for (size_t i = 0; i < fileNames.size(); i++)
+    {
+        std::ifstream file("../../testsuites/" + fileNames[i]);
+        int count = 0;
+        int passed = 0;
+        std::cout << fileNames[i] << std::endl;
+
+        while (std::getline(file, line, ';'))
+        {
+            fenLength = line.find("bm");
+            fen = line.substr(0, fenLength);
+            bestMove = line.substr(fenLength + 3);
+
+            engine::Position pos(fen);
+            engine::SearchManager SM;
+            std::string move = moveToSan(pos, SM.runIterativeDeepening(pos, 6));
+
+            count++;
+            if (move == bestMove)
+            {
+                passed++;
+            }
+            std::cout << count << "\tbm: " << bestMove << "   \tmove: " << move << "\t" << (move == bestMove ? "X" : " ") << std::endl;
+
+            std::getline(file, line);
+        }
+
+        std::cout << std::endl;
+        testCount.push_back(count);
+        testPassed.push_back(passed);
+        file.close();
+    }
+
+    for (size_t i = 0; i < fileNames.size(); i++)
+        std::cout << fileNames[i] << ": " << testPassed[i] << "/" << testCount[i] << std::endl;
 }

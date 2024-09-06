@@ -175,7 +175,7 @@ namespace engine
         }
 
         MoveList moveList;
-        generateMoves(pos, moveList);
+        generateMoves<ALL>(pos, moveList);
 
         if (moveList.size == 0)
         {
@@ -267,7 +267,7 @@ namespace engine
         alpha = std::max(alpha, eval);
 
         MoveList moveList;
-        generateMoves(pos, moveList);
+        generateMoves<CAPTURES>(pos, moveList);
 
         ExtMoveList extMoveList(moveList);
         scoreMoves(pos, extMoveList, Move());
@@ -279,9 +279,6 @@ namespace engine
         while (extMoveList.size > 0)
         {
             Move move = popMoveHighestScore(extMoveList);
-            if (!move.isCapture())
-                continue;
-
             pos.makeTurn(move, &state);
             count += quiescenceSearch(pos, newResult, -beta, -alpha);
             pos.unmakeTurn();

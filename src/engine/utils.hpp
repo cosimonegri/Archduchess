@@ -235,7 +235,7 @@ namespace utils
 
             RevertState state1, state2;
             MoveList moveList;
-            generateMoves(pos, moveList);
+            generateMoves<ALL>(pos, moveList);
             if (moveList.size == 0)
             {
                 continue;

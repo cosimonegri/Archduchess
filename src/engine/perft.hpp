@@ -18,7 +18,7 @@ namespace engine
 
         RevertState state;
         MoveList moveList = MoveList();
-        generateMoves(pos, moveList);
+        generateMoves<ALL>(pos, moveList);
 
         if (depth == 1 && !root)
             return moveList.size;

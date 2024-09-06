@@ -39,7 +39,7 @@ namespace engine
             // disambiguate
             Bitboard others = 0;
             MoveList moveList;
-            generateMoves(pos, moveList);
+            generateMoves<ALL>(pos, moveList);
             for (size_t i = 0; i < moveList.size; i++)
             {
                 Move otherMove = moveList.moves[i];
@@ -160,7 +160,7 @@ namespace engine
         }
 
         MoveList moveList;
-        generateMoves(pos, moveList);
+        generateMoves<ALL>(pos, moveList);
         for (size_t i = 0; i < moveList.size; i++)
         {
             Tile from = moveList.moves[i].getFrom();

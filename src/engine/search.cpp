@@ -12,39 +12,51 @@
 
 namespace engine
 {
-    SearchManager::SearchManager() : TT{TranspositionTable()}, listener{NULL}, cancel{false} {}
+    SearchManager::SearchManager() : TT{TranspositionTable()}, listener{NULL},
+                                     searching{false}, cancelled{false} {}
 
     void SearchManager::setListener(SearchListener *listener)
     {
         this->listener = listener;
     }
 
-    void SearchManager::setCancel()
+    void SearchManager::setSearching()
     {
-        cancelMtx.lock();
-        cancel = true;
-        cancelMtx.unlock();
+        searchMutex.lock();
+        searching = true;
+        searchMutex.unlock();
     }
 
-    void SearchManager::clearCancel()
+    void SearchManager::setCancelled()
     {
-        cancelMtx.lock();
-        cancel = false;
-        cancelMtx.unlock();
+        searchMutex.lock();
+        if (searching)
+        {
+            cancelled = true;
+        }
+        searchMutex.unlock();
     }
 
-    bool SearchManager::getCancel()
+    bool SearchManager::isCancelled()
     {
-        cancelMtx.lock();
-        bool canc = cancel;
-        cancelMtx.unlock();
-        return canc;
+        searchMutex.lock();
+        bool val = cancelled;
+        searchMutex.unlock();
+        return val;
+    }
+
+    void SearchManager::searchEnded()
+    {
+        searchMutex.lock();
+        searching = false;
+        cancelled = false;
+        searchMutex.unlock();
     }
 
     void SearchManager::clear()
     {
         TT.clear();
-        for (size_t i = 0; i << std::size(killers); i++)
+        for (size_t i = 0; i < std::size(killers); i++)
         {
             killers[i].add(Move());
             killers[i].add(Move());
@@ -60,9 +72,10 @@ namespace engine
 
     void SearchManager::startSearch(Position &pos)
     {
+        setSearching();
         Move bestMove = runIterativeDeepening(pos);
         listener->onSearchComplete(bestMove);
-        clearCancel();
+        searchEnded();
     }
 
     Move SearchManager::runIterativeDeepening(Position &pos, Depth maxDepth, SearchDiagnostic *sc)
@@ -84,7 +97,7 @@ namespace engine
             {
                 listener->onSearchInfo(depth, nodes, time, TT.getOccupancyRate());
             }
-            if (depth >= maxDepth || getCancel())
+            if (depth >= maxDepth || isCancelled())
             {
                 break;
             }
@@ -116,7 +129,7 @@ namespace engine
     uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,
                                    int ply, Eval alpha, Eval beta, Move bestMove)
     {
-        if (getCancel())
+        if (isCancelled())
         {
             return 0;
         }
@@ -207,7 +220,7 @@ namespace engine
             count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha, Move());
             pos.unmakeTurn();
 
-            if (getCancel())
+            if (isCancelled())
             {
                 return count;
             }

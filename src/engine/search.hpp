@@ -100,8 +100,9 @@ namespace engine
 
         SearchListener *listener;
 
-        bool cancel;
-        std::mutex cancelMtx;
+        bool searching;
+        bool cancelled;
+        std::mutex searchMutex;
 
         uint64_t search(Position &pos, SearchResult &result, Depth depth,
                         int ply, Eval alpha, Eval beta, Move bestMove);
@@ -111,9 +112,10 @@ namespace engine
         SearchManager();
 
         void setListener(SearchListener *listener);
-        void setCancel();
-        void clearCancel();
-        bool getCancel();
+        void setSearching();
+        void setCancelled();
+        bool isCancelled();
+        void searchEnded();
         void clear();
         void startSearch(Position &pos);
         Move runIterativeDeepening(Position &pos, Depth maxDepth = MAX_DEPTH,

@@ -5,6 +5,7 @@
 #include <map>
 #include <thread>
 #include <semaphore>
+#include <atomic>
 #include "search.hpp"
 #include "listeners.hpp"
 #include "position.hpp"
@@ -38,6 +39,7 @@ namespace engine
 
         std::thread thinkThread;
         std::binary_semaphore thinkSemaphore;
+        std::atomic<int> stopCount;
 
         void runThinkThread();
 

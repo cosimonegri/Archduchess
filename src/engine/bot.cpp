@@ -92,7 +92,8 @@ namespace engine
         return san;
     }
 
-    Bot::Bot() : pos{Position(START_FEN)}, SM{SearchManager()}, listener{NULL}, thinkSemaphore{0}
+    Bot::Bot() : pos{Position(START_FEN)}, SM{SearchManager()}, listener{NULL},
+                 thinkSemaphore{0}, stopCount{0}
     {
         SM.setListener(this);
         thinkThread = std::thread(&Bot::runThinkThread, this);
@@ -186,18 +187,22 @@ namespace engine
     void Bot::startThinking()
     {
         thinkSemaphore.release();
-        std::thread cancelThread{
+        ++stopCount;
+        std::thread stopThread{
             [this]
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(MAX_THINK_TIME_MS));
                 this->stopThinking();
             }};
-        cancelThread.detach();
+        stopThread.detach();
     }
 
     void Bot::stopThinking()
     {
-        SM.setCancel();
+        --stopCount;
+        int count = stopCount.load(std::memory_order_relaxed);
+        if (count == 0)
+            SM.setCancelled();
     }
 
     void Bot::onSearchInfo(Depth depth, uint64_t nodes, uint64_t timeMs, float ttOccupancy)
@@ -218,5 +223,4 @@ namespace engine
             SM.startSearch(pos);
         }
     }
-
 }

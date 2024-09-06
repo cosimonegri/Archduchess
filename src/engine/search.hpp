@@ -105,8 +105,11 @@ namespace engine
         std::mutex searchMutex;
 
         uint64_t search(Position &pos, SearchResult &result, Depth depth,
-                        int ply, Eval alpha, Eval beta, Move bestMove);
-        int scoreMove(Position &pos, Move &move, Killers &k);
+                        int ply, Eval alpha, Eval beta);
+        uint64_t quiescenceSearch(Position &pos, SearchResult &result, Eval alpha, Eval beta);
+        void scoreMoves(Position &pos, ExtMoveList &moveList, Move bestMove, Killers *k = NULL);
+        int scoreMove(Position &pos, Move &move, Killers *k = NULL);
+        Move popMoveHighestScore(ExtMoveList &moveList);
 
     public:
         SearchManager();

@@ -91,7 +91,7 @@ namespace engine
         auto begin = std::chrono::steady_clock::now();
         while (true)
         {
-            nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, result.bestMove);
+            nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL);
             auto time = getTimeMs(begin, std::chrono::steady_clock::now());
             if (listener != NULL)
             {
@@ -127,7 +127,7 @@ namespace engine
     }
 
     uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,
-                                   int ply, Eval alpha, Eval beta, Move bestMove)
+                                   int ply, Eval alpha, Eval beta)
     {
         if (isCancelled())
         {
@@ -142,8 +142,7 @@ namespace engine
 
         if (depth <= 0)
         {
-            result.eval = evaluate(pos);
-            return 1;
+            return quiescenceSearch(pos, result, alpha, beta);
         }
 
         Eval originalAlpha = alpha;
@@ -192,15 +191,12 @@ namespace engine
         }
 
         ExtMoveList extMoveList = ExtMoveList(moveList);
-        for (size_t i = 0; i < extMoveList.size; i++)
-        {
-            // maybe no need for bestMove because hashMove is
-            extMoveList.moves[i].score = moveList.moves[i] == bestMove
-                                             ? TT_SCORE
-                                         : entry != NULL && moveList.moves[i] == entry->bestMove
-                                             ? TT_SCORE
-                                             : scoreMove(pos, moveList.moves[i], killers[ply]);
-        }
+        Move bestMove = ply == 0
+                            ? result.bestMove
+                        : entry != NULL
+                            ? entry->bestMove
+                            : Move();
+        scoreMoves(pos, extMoveList, bestMove, &killers[ply]);
 
         SearchResult newResult;
         RevertState state;
@@ -209,15 +205,9 @@ namespace engine
 
         while (extMoveList.size > 0)
         {
-            size_t moveIndex = 0;
-            for (size_t j = 1; j < extMoveList.size; j++)
-            {
-                if (extMoveList.moves[j].score > extMoveList.moves[moveIndex].score)
-                    moveIndex = j;
-            }
-            Move move = extMoveList.moves[moveIndex];
+            Move move = popMoveHighestScore(extMoveList);
             pos.makeTurn(move, &state);
-            count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha, Move());
+            count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha);
             pos.unmakeTurn();
 
             if (isCancelled())
@@ -236,16 +226,13 @@ namespace engine
             if (alpha >= beta)
             {
                 cutOffs++;
-                if (pos.getPiece(move.getTo()) == NULL_PIECE)
+                if (!move.isCapture())
                 {
                     killers[ply].add(move);
                     history[pos.getTurn()][move.getFrom()][move.getTo()] += depth * depth;
                 }
                 goto exit;
             }
-
-            extMoveList.moves[moveIndex] = extMoveList.moves[extMoveList.size - 1];
-            extMoveList.size--;
         }
 
     exit:
@@ -263,7 +250,72 @@ namespace engine
         return count;
     }
 
-    int SearchManager::scoreMove(Position &pos, Move &move, Killers &k)
+    uint64_t SearchManager::quiescenceSearch(Position &pos, SearchResult &result, Eval alpha, Eval beta)
+    {
+        if (isCancelled())
+        {
+            return 0;
+        }
+
+        Eval eval = evaluate(pos);
+        if (eval >= beta)
+        {
+            cutOffs++;
+            result.eval = beta;
+            return 1;
+        }
+        alpha = std::max(alpha, eval);
+
+        MoveList moveList;
+        generateMoves(pos, moveList);
+
+        ExtMoveList extMoveList(moveList);
+        scoreMoves(pos, extMoveList, Move());
+
+        SearchResult newResult;
+        RevertState state;
+        uint64_t count = 0;
+
+        while (extMoveList.size > 0)
+        {
+            Move move = popMoveHighestScore(extMoveList);
+            if (!move.isCapture())
+                continue;
+
+            pos.makeTurn(move, &state);
+            count += quiescenceSearch(pos, newResult, -beta, -alpha);
+            pos.unmakeTurn();
+
+            if (isCancelled())
+            {
+                return count;
+            }
+
+            Eval newEval = -newResult.eval;
+            if (newEval >= beta)
+            {
+                cutOffs++;
+                result.eval = beta;
+                return count;
+            }
+            alpha = std::max(alpha, newEval);
+        }
+
+        result.eval = alpha;
+        return count;
+    }
+
+    void SearchManager::scoreMoves(Position &pos, ExtMoveList &moveList, Move bestMove, Killers *k)
+    {
+        for (size_t i = 0; i < moveList.size; i++)
+        {
+            moveList.moves[i].score = moveList.moves[i] == bestMove
+                                          ? TT_SCORE
+                                          : scoreMove(pos, moveList.moves[i], k);
+        }
+    }
+
+    int SearchManager::scoreMove(Position &pos, Move &move, Killers *k)
     {
         int score = 0;
         Piece piece = pos.getPiece(move.getFrom());
@@ -275,16 +327,31 @@ namespace engine
         score += MVV_LVA[typeOf(captured)][typeOf(piece)];
         if (captured == NULL_PIECE)
         {
-            if (k.matchA(move))
+            if (k != NULL && k->matchA(move))
             {
                 score += KILLER_SCORE_A;
             }
-            else if (k.matchB(move))
+            else if (k != NULL && k->matchB(move))
             {
                 score += KILLER_SCORE_B;
             }
             score += history[pos.getTurn()][move.getFrom()][move.getTo()];
         }
         return score;
+    }
+
+    Move SearchManager::popMoveHighestScore(ExtMoveList &moveList)
+    {
+        assert(moveList.size > 0);
+        size_t moveIndex = 0;
+        for (size_t j = 1; j < moveList.size; j++)
+        {
+            if (moveList.moves[j].score > moveList.moves[moveIndex].score)
+                moveIndex = j;
+        }
+        Move move = moveList.moves[moveIndex];
+        moveList.moves[moveIndex] = moveList.moves[moveList.size - 1];
+        moveList.size--;
+        return move;
     }
 }

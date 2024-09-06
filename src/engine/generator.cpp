@@ -100,7 +100,7 @@ namespace engine
             while (attacks != 0)
             {
                 Tile to = popLsb(attacks);
-                bool isCapture = pos.getPiece(to) == NULL_PIECE;
+                bool isCapture = pos.getPiece(to) != NULL_PIECE;
                 moveList.moves[moveList.size++] = Move(from, to, isCapture ? CAPTURE : QUIET);
             }
         }
@@ -117,7 +117,7 @@ namespace engine
         while (attacks != 0)
         {
             Tile to = popLsb(attacks);
-            bool isCapture = pos.getPiece(to) == NULL_PIECE;
+            bool isCapture = pos.getPiece(to) != NULL_PIECE;
             moveList.moves[moveList.size++] = Move(from, to, isCapture ? CAPTURE : QUIET);
         }
 

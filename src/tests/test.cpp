@@ -131,7 +131,7 @@ TEST_CASE("MoveTest", "[engine]")
             engine::Position pos(fen);
             engine::SearchManager sm;
             engine::SearchDiagnostic sc;
-            std::string move = moveToSan(pos, sm.runIterativeDeepening(pos, 6, &sc));
+            std::string move = moveToSan(pos, sm.runIterativeDeepening(pos, 8, &sc));
             bool correct = bestMoves.find(move) != std::string::npos;
 
             count++;

@@ -457,6 +457,8 @@ namespace engine
         {
             return;
         }
+        assert(state->move.raw() != 0);
+
         repetitions.pop_back();
         switchTurn();
 
@@ -496,6 +498,54 @@ namespace engine
             setPiece(from, makePiece(PAWN, turn));
         }
 
+        if (turn == BLACK)
+        {
+            fullMove -= 1;
+        }
+
+        castling = state->castling;
+        enPassant = state->enPassant;
+        halfMove = state->halfMove;
+        zobristKey = state->zobristKey;
+        state = state->previous;
+    }
+
+    // todo how to handle repetitions
+    void Position::makeNullMove(RevertState *newState)
+    {
+        newState->move = Move();
+        newState->castling = castling;
+        newState->enPassant = enPassant;
+        newState->halfMove = halfMove;
+        newState->captured = NULL_PIECE;
+        newState->zobristKey = zobristKey;
+        newState->previous = state;
+        state = newState;
+
+        halfMove += 1;
+        if (turn == BLACK)
+        {
+            fullMove += 1;
+        }
+
+        if (enPassant != NULL_TILE)
+        {
+            zobristKey ^= getEnPassantFileZ(enPassant);
+            enPassant = NULL_TILE;
+        }
+
+        switchTurn();
+    }
+
+    void Position::unmakeNullMove()
+    {
+        if (state == NULL)
+        {
+            return;
+        }
+        assert(state->move.raw() == 0);
+
+        switchTurn();
         if (turn == BLACK)
         {
             fullMove -= 1;

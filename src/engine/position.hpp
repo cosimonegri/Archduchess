@@ -138,6 +138,8 @@ namespace engine
 
         void makeTurn(Move move, RevertState *newState = NULL);
         void unmakeTurn();
+        void makeNullMove(RevertState *newState);
+        void unmakeNullMove();
 
         Key getZobristKey() const;
         bool isRepeated() const;

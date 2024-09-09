@@ -91,7 +91,7 @@ namespace engine
         auto begin = std::chrono::steady_clock::now();
         while (true)
         {
-            nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL);
+            nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, false);
             auto time = getTimeMs(begin, std::chrono::steady_clock::now());
             if (listener != NULL)
             {
@@ -127,7 +127,7 @@ namespace engine
     }
 
     uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,
-                                   int ply, Eval alpha, Eval beta)
+                                   int ply, Eval alpha, Eval beta, bool canNull)
     {
         if (isCancelled())
         {
@@ -190,6 +190,25 @@ namespace engine
             return 1;
         }
 
+        uint64_t count = 0;
+        SearchResult newResult;
+        RevertState state;
+
+        // todo not during zugzwang
+        if (canNull && ply > 0 && depth >= 3 && !pos.isKingInCheck())
+        {
+            Depth reduction = depth > 6 ? 3 : 2;
+            pos.makeNullMove(&state);
+            count += search(pos, newResult, depth - 1 - reduction, ply + 1, -beta, -beta + 1, false);
+            pos.unmakeNullMove();
+            if (-newResult.eval >= beta)
+            {
+                cutOffs++;
+                result.eval = beta;
+                return count;
+            }
+        }
+
         ExtMoveList extMoveList = ExtMoveList(moveList);
         Move bestMove = ply == 0
                             ? result.bestMove
@@ -198,16 +217,12 @@ namespace engine
                             : Move();
         scoreMoves(pos, extMoveList, bestMove, &killers[ply]);
 
-        SearchResult newResult;
-        RevertState state;
-        uint64_t count = 0;
         result.eval = MIN_EVAL;
-
         while (extMoveList.size > 0)
         {
             Move move = popMoveHighestScore(extMoveList);
             pos.makeTurn(move, &state);
-            count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha);
+            count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha, true);
             pos.unmakeTurn();
 
             if (isCancelled())

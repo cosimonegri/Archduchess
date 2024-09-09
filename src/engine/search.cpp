@@ -65,6 +65,10 @@ namespace engine
             for (Tile from = A1; from <= H8; ++from)
                 for (Tile to = A1; to <= H8; ++to)
                     history[color][from][to] = 0;
+
+        moveToMake = Move();
+        nodes = 0;
+        qNodes = 0;
         cutOffs = 0;
         ttAccesses = 0;
         ttHits = 0;
@@ -84,14 +88,10 @@ namespace engine
         clear();
 
         Depth depth = 1;
-        uint64_t nodes = 0;
-        SearchResult result;
-        result.bestMove = Move();
-
         auto begin = std::chrono::steady_clock::now();
         while (true)
         {
-            nodes += search(pos, result, depth, 0, MIN_EVAL, MAX_EVAL, false);
+            search(pos, depth, 0, MIN_EVAL, MAX_EVAL, false);
             auto time = getTimeMs(begin, std::chrono::steady_clock::now());
             if (listener != NULL)
             {
@@ -109,6 +109,7 @@ namespace engine
         {
             sc->depth = depth;
             sc->nodes = nodes;
+            sc->qNodes = qNodes;
             sc->timeMs = totalTime;
             sc->cutOffs = cutOffs;
             sc->ttAccesses = ttAccesses;
@@ -123,11 +124,11 @@ namespace engine
         debug("TT:\t" + std::to_string(TT.getOccupancyRate() * 100) + "% of " +
               std::to_string(TT_SIZE * sizeof(TTEntry) / 1048576) + " MB\n");
 
-        return result.bestMove;
+        return moveToMake;
     }
 
-    uint64_t SearchManager::search(Position &pos, SearchResult &result, Depth depth,
-                                   int ply, Eval alpha, Eval beta, bool canNull)
+    Eval SearchManager::search(Position &pos, Depth depth, int ply,
+                               Eval alpha, Eval beta, bool canNull)
     {
         if (isCancelled())
         {
@@ -136,26 +137,25 @@ namespace engine
 
         if (pos.getHalfMove() >= 100 || pos.isRepeated())
         {
-            result.eval = 0;
-            return 1;
+            nodes++;
+            return 0;
         }
 
         if (depth <= 0)
         {
-            return quiescenceSearch(pos, result, alpha, beta);
+            return quiescenceSearch(pos, alpha, beta);
         }
 
         Eval originalAlpha = alpha;
         TTEntry *entry = TT.get(pos.getZobristKey());
         ttAccesses++;
-        if (entry != NULL && entry->depth >= depth)
+        if (ply > 0 && entry != NULL && entry->depth >= depth)
         {
             ttHits++;
             if (entry->type == EXACT)
             {
-                result.eval = entry->eval;
-                result.bestMove = entry->bestMove;
-                return 1;
+                nodes++;
+                return entry->eval;
             }
             else if (entry->type == LOWER_BOUND)
             {
@@ -168,9 +168,8 @@ namespace engine
 
             if (alpha >= beta)
             {
-                result.eval = entry->eval;
-                result.bestMove = entry->bestMove;
-                return 1;
+                nodes++;
+                return entry->eval;
             }
         }
 
@@ -179,19 +178,18 @@ namespace engine
 
         if (moveList.size == 0)
         {
+            nodes++;
             if (pos.isKingInCheck())
             {
-                result.eval = MIN_EVAL + ply;
+                return MIN_EVAL + ply;
             }
             else
             {
-                result.eval = 0;
+                return 0;
             }
-            return 1;
         }
 
-        uint64_t count = 0;
-        SearchResult newResult;
+        Eval eval;
         RevertState state;
 
         // todo not during zugzwang
@@ -199,45 +197,45 @@ namespace engine
         {
             Depth reduction = depth > 6 ? 3 : 2;
             pos.makeNullMove(&state);
-            count += search(pos, newResult, depth - 1 - reduction, ply + 1, -beta, -beta + 1, false);
+            eval = -search(pos, depth - 1 - reduction, ply + 1, -beta, -beta + 1, false);
             pos.unmakeNullMove();
-            if (-newResult.eval >= beta)
+            if (eval >= beta)
             {
                 cutOffs++;
-                result.eval = beta;
-                return count;
+                return beta;
             }
         }
 
         ExtMoveList extMoveList = ExtMoveList(moveList);
-        Move bestMove = ply == 0
-                            ? result.bestMove
+        Move hashMove = ply == 0
+                            ? moveToMake
                         : entry != NULL
-                            ? entry->bestMove
+                            ? entry->hashMove
                             : Move();
-        scoreMoves(pos, extMoveList, bestMove, &killers[ply]);
+        scoreMoves(pos, extMoveList, hashMove, &killers[ply]);
 
-        result.eval = MIN_EVAL;
+        Eval bestEval = MIN_EVAL;
+        Move bestMove = Move();
+
         while (extMoveList.size > 0)
         {
             Move move = popMoveHighestScore(extMoveList);
             pos.makeTurn(move, &state);
-            count += search(pos, newResult, depth - 1, ply + 1, -beta, -alpha, true);
+            eval = -search(pos, depth - 1, ply + 1, -beta, -alpha, true);
             pos.unmakeTurn();
 
             if (isCancelled())
             {
-                return count;
+                return 0;
             }
 
-            Eval newEval = -newResult.eval;
-            if (newEval > result.eval)
+            if (eval > bestEval)
             {
-                result.eval = newEval;
-                result.bestMove = move;
+                bestEval = eval;
+                bestMove = move;
             }
 
-            alpha = std::max(alpha, result.eval);
+            alpha = std::max(alpha, eval);
             if (alpha >= beta)
             {
                 cutOffs++;
@@ -246,26 +244,29 @@ namespace engine
                     killers[ply].add(move);
                     history[pos.getTurn()][move.getFrom()][move.getTo()] += depth * depth;
                 }
-                goto exit;
+                break;
             }
         }
 
-    exit:
         NodeType type = EXACT;
-        if (result.eval >= beta)
+        if (bestEval >= beta)
         {
             type = LOWER_BOUND;
         }
-        else if (result.eval <= originalAlpha)
+        else if (bestEval <= originalAlpha)
         {
             type = UPPER_BOUND;
         }
-        TT.add(pos.getZobristKey(), depth, type, result.bestMove, result.eval);
+        TT.add(pos.getZobristKey(), depth, type, bestMove, bestEval);
 
-        return count;
+        if (ply == 0)
+        {
+            moveToMake = bestMove;
+        }
+        return bestEval;
     }
 
-    uint64_t SearchManager::quiescenceSearch(Position &pos, SearchResult &result, Eval alpha, Eval beta)
+    Eval SearchManager::quiescenceSearch(Position &pos, Eval alpha, Eval beta)
     {
         if (isCancelled())
         {
@@ -275,9 +276,10 @@ namespace engine
         Eval eval = evaluate(pos);
         if (eval >= beta)
         {
+            nodes++;
+            qNodes++;
             cutOffs++;
-            result.eval = beta;
-            return 1;
+            return beta;
         }
         alpha = std::max(alpha, eval);
 
@@ -287,41 +289,35 @@ namespace engine
         ExtMoveList extMoveList(moveList);
         scoreMoves(pos, extMoveList, Move());
 
-        SearchResult newResult;
         RevertState state;
-        uint64_t count = 0;
-
         while (extMoveList.size > 0)
         {
             Move move = popMoveHighestScore(extMoveList);
             pos.makeTurn(move, &state);
-            count += quiescenceSearch(pos, newResult, -beta, -alpha);
+            eval = -quiescenceSearch(pos, -beta, -alpha);
             pos.unmakeTurn();
 
             if (isCancelled())
             {
-                return count;
+                return 0;
             }
 
-            Eval newEval = -newResult.eval;
-            if (newEval >= beta)
+            if (eval >= beta)
             {
                 cutOffs++;
-                result.eval = beta;
-                return count;
+                return beta;
             }
-            alpha = std::max(alpha, newEval);
+            alpha = std::max(alpha, eval);
         }
 
-        result.eval = alpha;
-        return count;
+        return alpha;
     }
 
-    void SearchManager::scoreMoves(Position &pos, ExtMoveList &moveList, Move bestMove, Killers *k)
+    void SearchManager::scoreMoves(Position &pos, ExtMoveList &moveList, Move hashMove, Killers *k)
     {
         for (size_t i = 0; i < moveList.size; i++)
         {
-            moveList.moves[i].score = moveList.moves[i] == bestMove
+            moveList.moves[i].score = moveList.moves[i] == hashMove
                                           ? TT_SCORE
                                           : scoreMove(pos, moveList.moves[i], k);
         }

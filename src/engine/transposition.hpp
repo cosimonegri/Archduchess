@@ -22,7 +22,7 @@ namespace engine
         Key key;
         Depth depth;
         NodeType type;
-        Move bestMove;
+        Move hashMove;
         Eval eval;
 
         bool isValid() const
@@ -42,7 +42,7 @@ namespace engine
         ~TranspositionTable();
 
         void clear();
-        void add(Key key, Depth depth, NodeType type, Move bestMove, Eval eval);
+        void add(Key key, Depth depth, NodeType type, Move hashMove, Eval eval);
         TTEntry *get(Key key);
         float getOccupancyRate();
     };

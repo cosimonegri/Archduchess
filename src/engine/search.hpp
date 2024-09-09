@@ -47,16 +47,11 @@ namespace engine
         };
     };
 
-    struct SearchResult
-    {
-        Move bestMove;
-        Eval eval;
-    };
-
     struct SearchDiagnostic
     {
         Depth depth;
         uint64_t nodes;
+        uint64_t qNodes;
         uint64_t timeMs;
         uint64_t cutOffs;
         uint64_t ttAccesses;
@@ -94,6 +89,10 @@ namespace engine
         TranspositionTable TT;
         Killers killers[MAX_DEPTH + 1];
         int history[2][64][64];
+
+        Move moveToMake;
+        uint64_t nodes;
+        uint64_t qNodes;
         uint64_t cutOffs;
         uint64_t ttAccesses;
         uint64_t ttHits;
@@ -104,10 +103,9 @@ namespace engine
         bool cancelled;
         std::mutex searchMutex;
 
-        uint64_t search(Position &pos, SearchResult &result, Depth depth,
-                        int ply, Eval alpha, Eval beta, bool canNull);
-        uint64_t quiescenceSearch(Position &pos, SearchResult &result, Eval alpha, Eval beta);
-        void scoreMoves(Position &pos, ExtMoveList &moveList, Move bestMove, Killers *k = NULL);
+        Eval search(Position &pos, Depth depth, int ply, Eval alpha, Eval beta, bool canNull);
+        Eval quiescenceSearch(Position &pos, Eval alpha, Eval beta);
+        void scoreMoves(Position &pos, ExtMoveList &moveList, Move hashMove, Killers *k = NULL);
         int scoreMove(Position &pos, Move &move, Killers *k = NULL);
         Move popMoveHighestScore(ExtMoveList &moveList);
 

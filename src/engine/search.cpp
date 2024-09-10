@@ -236,15 +236,15 @@ namespace engine
             return 0;
         }
 
-        Eval eval = evaluate(pos);
-        if (eval >= beta)
+        Eval standPat = evaluate(pos);
+        if (standPat >= beta)
         {
             nodes++;
             qNodes++;
             cutOffs++;
             return beta;
         }
-        alpha = std::max(alpha, eval);
+        alpha = std::max(alpha, standPat);
 
         MoveList moveList;
         generateMoves<CAPTURES>(pos, moveList);
@@ -252,10 +252,19 @@ namespace engine
         ExtMoveList extMoveList(moveList);
         scoreMoves(pos, extMoveList, Move());
 
+        Eval eval;
         RevertState state;
         while (extMoveList.size > 0)
         {
             Move move = popMoveHighestScore(extMoveList);
+
+            // todo don't do delta pruning in endgame
+            if (!move.isPromotion() &&
+                standPat + getPieceEval(typeOf(pos.getPiece(move.getTo()))) + 200 < alpha)
+            {
+                continue;
+            }
+
             pos.makeTurn(move, &state);
             eval = -quiescenceSearch(pos, -beta, -alpha);
             pos.unmakeTurn();

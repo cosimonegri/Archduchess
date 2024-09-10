@@ -86,7 +86,7 @@ namespace engine
         return pieceEval[pt];
     }
 
-    inline int getPiecePosEval(PieceType pt, Color color, Tile tile)
+    inline Eval getPiecePosEval(PieceType pt, Color color, Tile tile)
     {
         int index = color == WHITE
                         ? (7 - rankOf(tile)) * 8 + fileOf(tile)

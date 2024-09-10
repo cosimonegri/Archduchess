@@ -105,6 +105,7 @@ TEST_CASE("MoveTest", "[engine]")
     std::vector<int> testPassed;
     std::vector<uint64_t> depths;
     std::vector<uint64_t> nodes;
+    std::vector<uint64_t> qNodes;
     std::vector<uint64_t> timesMs;
     std::vector<uint64_t> cutOffs;
     std::vector<uint64_t> ttAccesses;
@@ -141,6 +142,7 @@ TEST_CASE("MoveTest", "[engine]")
             }
             depths.push_back(sc.depth);
             nodes.push_back(sc.nodes);
+            qNodes.push_back(sc.qNodes);
             timesMs.push_back(sc.timeMs);
             cutOffs.push_back(sc.cutOffs);
             ttAccesses.push_back(sc.ttAccesses);
@@ -167,6 +169,7 @@ TEST_CASE("MoveTest", "[engine]")
         << "Search diagnostic averages" << std::endl;
     std::cout << "Depth:\t\t" << average(depths) << std::endl;
     std::cout << "Nodes:\t\t" << average(nodes) << std::endl;
+    std::cout << "Q nodes:\t" << average(qNodes) << std::endl;
     std::cout << "Time:\t\t" << average(timesMs) << " ms" << std::endl;
     if (totalTime != 0)
     {

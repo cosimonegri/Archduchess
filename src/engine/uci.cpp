@@ -38,10 +38,7 @@ namespace engine
                 respond("readyok");
 
             else if (token == "ucinewgame")
-            {
                 bot.startNewGame();
-                continue;
-            }
 
             else if (token == "position")
                 processPosition(iss);
@@ -50,10 +47,13 @@ namespace engine
                 processGo(iss);
 
             else if (token == "stop")
-                continue;
+                bot.stopThinking();
 
             else if (token == "quit")
-                break;
+            {
+                bot.stopThinking();
+                exit(0);
+            }
 
             else if (token == "d")
                 printPosition();
@@ -63,7 +63,6 @@ namespace engine
     void UCIEngine::respond(std::string message)
     {
         std::cout << message << std::endl;
-        // log(message);
     }
 
     void UCIEngine::processPosition(std::istringstream &iss)
@@ -102,20 +101,92 @@ namespace engine
 
         if (token == "perft")
         {
-            iss >> token;
-            try
-            {
-                Depth depth = std::stoi(token);
-                runPerft(depth);
-            }
-            catch (...)
-            {
-            }
+            Depth depth = readNextInt(iss);
+            runPerft(depth);
         }
         else
         {
-            bot.startThinking();
+            ThinkInfo info;
+            do
+            {
+                readGoParameters(info, iss, token);
+            } while (iss >> token);
+            if (info.flags == NO_THINK_FLAG)
+            {
+                info.flags |= F_INFINITE;
+            }
+            bot.startThinking(info);
         }
+    }
+
+    void UCIEngine::readGoParameters(ThinkInfo &info, std::istringstream &iss, std::string &token)
+    {
+        if (token == "searchmoves")
+        {
+            // not implemented
+            info.flags |= F_INFINITE;
+        }
+        else if (token == "ponder")
+        {
+            // not implemented
+            info.flags |= F_INFINITE;
+        }
+        else if (token == "wtime")
+        {
+            info.flags |= F_TIME;
+            info.time[WHITE] = readNextInt(iss);
+        }
+        else if (token == "btime")
+        {
+            info.flags |= F_TIME;
+            info.time[BLACK] = readNextInt(iss);
+        }
+        else if (token == "winc")
+        {
+            info.flags |= F_INC;
+            info.increment[WHITE] = readNextInt(iss);
+        }
+        else if (token == "binc")
+        {
+            info.flags |= F_INC;
+            info.increment[BLACK] = readNextInt(iss);
+        }
+        else if (token == "movestogo")
+        {
+            info.flags |= F_MOVESTOGO;
+            info.movesToGo = readNextInt(iss);
+        }
+        else if (token == "depth")
+        {
+            info.flags |= F_DEPTH;
+            info.depth = readNextInt(iss);
+        }
+        else if (token == "nodes")
+        {
+            info.flags |= F_NODES;
+            info.nodes = readNextInt(iss);
+        }
+        else if (token == "mate")
+        {
+            // not implemented
+            info.flags |= F_INFINITE;
+        }
+        else if (token == "movetime")
+        {
+            info.flags |= F_MOVETIME;
+            info.moveTime = readNextInt(iss);
+        }
+        else if (token == "infinite")
+        {
+            info.flags |= F_INFINITE;
+        }
+    }
+
+    int UCIEngine::readNextInt(std::istringstream &iss)
+    {
+        std::string token;
+        iss >> token;
+        return std::stoi(token);
     }
 
     void UCIEngine::onReceiveInfo(Depth depth, uint64_t nodes, uint64_t timeMs, float ttOccupancy)

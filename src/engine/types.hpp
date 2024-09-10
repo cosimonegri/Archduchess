@@ -15,6 +15,8 @@ namespace engine
 
     using Eval = int16_t;
 
+    using ThinkFlags = uint8_t;
+
     enum Color
     {
         WHITE,
@@ -242,6 +244,40 @@ namespace engine
     {
         ORTHOGONAL,
         DIAGONAL,
+    };
+
+    enum ThinkTask
+    {
+        NOTHING,
+        SEARCH,
+        PONDER
+    };
+
+    enum ThinkFlag
+    {
+        NO_THINK_FLAG,
+        F_TIME = 1,
+        F_INC = 2,
+        F_MOVESTOGO = 4,
+        F_DEPTH = 8,
+        F_NODES = 16,
+        F_MATE = 32,
+        F_MOVETIME = 64,
+        F_INFINITE = 128
+    };
+
+    struct ThinkInfo
+    {
+        ThinkTask task;
+        ThinkFlags flags;
+        int time[2];
+        int increment[2];
+        int movesToGo;
+        int depth;
+        int nodes;
+        int moveTime;
+
+        ThinkInfo() : task{SEARCH}, flags{0} {};
     };
 }
 

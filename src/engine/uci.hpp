@@ -18,6 +18,8 @@ namespace engine
 
         void processPosition(std::istringstream &iss);
         void processGo(std::istringstream &iss);
+        void readGoParameters(ThinkInfo &info, std::istringstream &iss, std::string &token);
+        int readNextInt(std::istringstream &iss);
         void printPosition();
 
         void runPerft(Depth depth);

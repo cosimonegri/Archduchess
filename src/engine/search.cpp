@@ -13,44 +13,11 @@
 namespace engine
 {
     SearchManager::SearchManager() : TT{TranspositionTable()}, listener{NULL},
-                                     searching{false}, cancelled{false} {}
+                                     thinkInfo{NULL} {}
 
     void SearchManager::setListener(SearchListener *listener)
     {
         this->listener = listener;
-    }
-
-    void SearchManager::setSearching()
-    {
-        searchMutex.lock();
-        searching = true;
-        searchMutex.unlock();
-    }
-
-    void SearchManager::setCancelled()
-    {
-        searchMutex.lock();
-        if (searching)
-        {
-            cancelled = true;
-        }
-        searchMutex.unlock();
-    }
-
-    bool SearchManager::isCancelled()
-    {
-        searchMutex.lock();
-        bool val = cancelled;
-        searchMutex.unlock();
-        return val;
-    }
-
-    void SearchManager::searchEnded()
-    {
-        searchMutex.lock();
-        searching = false;
-        cancelled = false;
-        searchMutex.unlock();
     }
 
     void SearchManager::clear()
@@ -74,12 +41,15 @@ namespace engine
         ttHits = 0;
     }
 
-    void SearchManager::startSearch(Position &pos)
+    void SearchManager::startSearch(Position &pos, ThinkInfo *info)
     {
-        setSearching();
+        uint64_t thinkTime = calcThinkTimeMs(*info, pos.getTurn());
+        thinkInfo = info;
+        startTime = std::chrono::steady_clock::now();
+        endTime = startTime + std::chrono::milliseconds(thinkTime);
         Move bestMove = runIterativeDeepening(pos);
+        thinkInfo = NULL;
         listener->onSearchComplete(bestMove);
-        searchEnded();
     }
 
     Move SearchManager::runIterativeDeepening(Position &pos, Depth maxDepth, SearchDiagnostic *sc)
@@ -97,7 +67,7 @@ namespace engine
             {
                 listener->onSearchInfo(depth, nodes, time, TT.getOccupancyRate());
             }
-            if (depth >= maxDepth || isCancelled())
+            if (depth >= maxDepth || shouldStop(thinkInfo, depth, nodes, endTime))
             {
                 break;
             }
@@ -117,20 +87,13 @@ namespace engine
             sc->ttOccupancy = TT.getOccupancyRate();
         }
 
-        debug("Depth:\t" + std::to_string(depth));
-        debug("Nodes:\t" + std::to_string(nodes));
-        debug("Time:\t" + std::to_string(totalTime) + " ms");
-        debug("NPS:\t" + std::to_string(nodes / totalTime) + "k");
-        debug("TT:\t" + std::to_string(TT.getOccupancyRate() * 100) + "% of " +
-              std::to_string(TT_SIZE * sizeof(TTEntry) / 1048576) + " MB\n");
-
         return moveToMake;
     }
 
     Eval SearchManager::search(Position &pos, Depth depth, int ply,
                                Eval alpha, Eval beta, bool canNull)
     {
-        if (isCancelled())
+        if (shouldStop(thinkInfo, 0, nodes, endTime))
         {
             return 0;
         }
@@ -224,7 +187,7 @@ namespace engine
             eval = -search(pos, depth - 1, ply + 1, -beta, -alpha, true);
             pos.unmakeTurn();
 
-            if (isCancelled())
+            if (shouldStop(thinkInfo, 0, nodes, endTime))
             {
                 return 0;
             }
@@ -268,7 +231,7 @@ namespace engine
 
     Eval SearchManager::quiescenceSearch(Position &pos, Eval alpha, Eval beta)
     {
-        if (isCancelled())
+        if (shouldStop(thinkInfo, 0, nodes, endTime))
         {
             return 0;
         }
@@ -297,7 +260,7 @@ namespace engine
             eval = -quiescenceSearch(pos, -beta, -alpha);
             pos.unmakeTurn();
 
-            if (isCancelled())
+            if (shouldStop(thinkInfo, 0, nodes, endTime))
             {
                 return 0;
             }

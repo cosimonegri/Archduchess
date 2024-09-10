@@ -27,8 +27,6 @@ namespace engine
     std::string moveToUci(Move move);
     std::string moveToSan(Position &pos, Move move);
 
-    constexpr int MAX_THINK_TIME_MS = 100;
-
     class Bot : public SearchListener
     {
     private:
@@ -37,9 +35,9 @@ namespace engine
 
         MoveListener *listener;
 
+        ThinkInfo thinkInfo;
         std::thread thinkThread;
         std::binary_semaphore thinkSemaphore;
-        std::atomic<int> stopCount;
 
         void runThinkThread();
 
@@ -53,7 +51,7 @@ namespace engine
         void setListener(MoveListener *listener);
 
         void startNewGame();
-        void startThinking();
+        void startThinking(ThinkInfo info);
         void stopThinking();
         void onSearchInfo(Depth depth, uint64_t nodes, uint64_t timeMs,
                           float ttOccupancy) override;

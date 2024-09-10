@@ -6,6 +6,7 @@
 #include "evaluation.hpp"
 #include "position.hpp"
 #include "generator.hpp"
+#include "time.hpp"
 #include "listeners.hpp"
 #include "move.hpp"
 
@@ -97,11 +98,11 @@ namespace engine
         uint64_t ttAccesses;
         uint64_t ttHits;
 
-        SearchListener *listener;
+        ThinkInfo *thinkInfo;
+        std::chrono::_V2::steady_clock::time_point startTime;
+        std::chrono::_V2::steady_clock::time_point endTime;
 
-        bool searching;
-        bool cancelled;
-        std::mutex searchMutex;
+        SearchListener *listener;
 
         Eval search(Position &pos, Depth depth, int ply, Eval alpha, Eval beta, bool canNull);
         Eval quiescenceSearch(Position &pos, Eval alpha, Eval beta);
@@ -113,12 +114,8 @@ namespace engine
         SearchManager();
 
         void setListener(SearchListener *listener);
-        void setSearching();
-        void setCancelled();
-        bool isCancelled();
-        void searchEnded();
         void clear();
-        void startSearch(Position &pos);
+        void startSearch(Position &pos, ThinkInfo *info);
         Move runIterativeDeepening(Position &pos, Depth maxDepth = MAX_DEPTH,
                                    SearchDiagnostic *sc = NULL);
     };

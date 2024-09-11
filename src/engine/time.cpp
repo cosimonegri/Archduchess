@@ -12,7 +12,7 @@ namespace engine
 
         uint64_t thinkTimeMs = 0;
         int movesToGo = info.flags & F_MOVESTOGO
-                            ? info.movesToGo
+                            ? info.movesToGo + 2
                             : DEFAULT_MOVESTOGO;
 
         if (info.flags & F_TIME)

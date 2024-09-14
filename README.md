@@ -3,7 +3,7 @@
 A UCI chess engine written from scratch rated ~2050 on lichess.<br><br>
 [Play against Archduchess on Lichess!](https://lichess.org/@/ArchduchessBot)
 
-<img src=https://github.com/user-attachments/assets/4f227f4c-0fba-4e0c-b0ce-1b24db836af2 />
+![Screenshot 2024-09-14 125054](https://github.com/user-attachments/assets/569f1001-8da8-47c1-bf32-8157c68cb3aa)
 
 ## Features
 

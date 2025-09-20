@@ -4,11 +4,14 @@
 #include <vector>
 #include <tuple>
 #include <numeric>
+#include <filesystem>
 #include "bot.hpp"
 #include "perft.hpp"
 #include "position.hpp"
 #include "zobrist.hpp"
 #include "bitboard.hpp"
+
+std::string TESTSUITES_FOLDER = "testsuites/";
 
 uint64_t average(std::vector<uint64_t> const &v)
 {
@@ -100,28 +103,40 @@ TEST_CASE("MoveTest", "[engine]")
     engine::bitboard::init();
     engine::zobrist::init();
 
-    std::vector<std::string> fileNames = {"wac201.epd"};
-    std::vector<int> testCount;
-    std::vector<int> testPassed;
-    std::vector<uint64_t> depths;
-    std::vector<uint64_t> nodes;
-    std::vector<uint64_t> qNodes;
-    std::vector<uint64_t> timesMs;
-    std::vector<uint64_t> cutOffs;
-    std::vector<uint64_t> ttAccesses;
-    std::vector<uint64_t> ttHits;
+    struct TestFileInfo
+    {
+        std::string fileName;
+        int testCount;
+        int testPassed;
+        std::vector<uint64_t> depths;
+        std::vector<uint64_t> nodes;
+        std::vector<uint64_t> qNodes;
+        std::vector<uint64_t> timesMs;
+        std::vector<uint64_t> cutOffs;
+        std::vector<uint64_t> ttAccesses;
+        std::vector<uint64_t> ttHits;
+
+        TestFileInfo(std::string fileName) : fileName(fileName),
+                                             testCount(0), testPassed(0) {}
+    };
+
+    std::vector<TestFileInfo> testFilesInfo;
 
     std::string line;
     std::string fen;
     std::string bestMoves;
     size_t fenLength;
 
-    for (size_t i = 0; i < fileNames.size(); i++)
+    for (const auto &entry : std::filesystem::directory_iterator(TESTSUITES_FOLDER))
     {
-        std::ifstream file("../../testsuites/" + fileNames[i]);
-        int count = 0;
-        int passed = 0;
-        std::cout << fileNames[i] << std::endl;
+        if (!entry.is_regular_file())
+            continue;
+
+        std::string fileName = entry.path().filename().string();
+        TestFileInfo testFileInfo(fileName);
+
+        std::cout << fileName << std::endl;
+        std::ifstream file(entry.path());
 
         while (std::getline(file, line, ';'))
         {
@@ -135,51 +150,52 @@ TEST_CASE("MoveTest", "[engine]")
             std::string move = moveToSan(pos, sm.runIterativeDeepening(pos, 8, &sc));
             bool correct = bestMoves.find(move) != std::string::npos;
 
-            count++;
+            testFileInfo.testCount++;
             if (correct)
             {
-                passed++;
+                testFileInfo.testPassed++;
             }
-            depths.push_back(sc.depth);
-            nodes.push_back(sc.nodes);
-            qNodes.push_back(sc.qNodes);
-            timesMs.push_back(sc.timeMs);
-            cutOffs.push_back(sc.cutOffs);
-            ttAccesses.push_back(sc.ttAccesses);
-            ttHits.push_back(sc.ttHits);
+            testFileInfo.depths.push_back(sc.depth);
+            testFileInfo.nodes.push_back(sc.nodes);
+            testFileInfo.qNodes.push_back(sc.qNodes);
+            testFileInfo.timesMs.push_back(sc.timeMs);
+            testFileInfo.cutOffs.push_back(sc.cutOffs);
+            testFileInfo.ttAccesses.push_back(sc.ttAccesses);
+            testFileInfo.ttHits.push_back(sc.ttHits);
 
-            std::cout << count << "\tbm: " << bestMoves << "   \tmove: " << move << "\t" << (correct ? "X" : " ") << std::endl;
+            std::cout << testFileInfo.testCount << "\tbm: " << bestMoves << "   \tmove: "
+                      << move << "\t" << (correct ? "X" : " ") << std::endl;
             std::getline(file, line);
         }
 
         std::cout << std::endl;
-        testCount.push_back(count);
-        testPassed.push_back(passed);
+        testFilesInfo.push_back(testFileInfo);
         file.close();
     }
 
-    for (size_t i = 0; i < fileNames.size(); i++)
-        std::cout << fileNames[i] << ": " << testPassed[i] << "/" << testCount[i] << std::endl;
-
-    uint64_t totalTime = std::reduce(timesMs.begin(), timesMs.end());
-    uint64_t totalAccesses = std::reduce(ttAccesses.begin(), ttAccesses.end());
-
-    std::cout
-        << std::endl
-        << "Search diagnostic averages" << std::endl;
-    std::cout << "Depth:\t\t" << average(depths) << std::endl;
-    std::cout << "Nodes:\t\t" << average(nodes) << std::endl;
-    std::cout << "Q nodes:\t" << average(qNodes) << std::endl;
-    std::cout << "Time:\t\t" << average(timesMs) << " ms" << std::endl;
-    if (totalTime != 0)
+    for (TestFileInfo tfi : testFilesInfo)
     {
-        uint64_t nps = std::reduce(nodes.begin(), nodes.end()) / totalTime;
-        std::cout << "NPS:\t\t" << nps << "k" << std::endl;
-    }
-    std::cout << "Cut-offs:\t" << average(cutOffs) << std::endl;
-    if (totalAccesses != 0)
-    {
-        float ttHitRate = ((float)std::reduce(ttHits.begin(), ttHits.end())) / ((float)totalAccesses);
-        std::cout << "TT hit rate:\t" << ttHitRate * 100 << "%" << std::endl;
+        std::cout << tfi.fileName << ": " << tfi.testPassed << "/" << tfi.testCount << std::endl;
+
+        uint64_t totalTime = std::reduce(tfi.timesMs.begin(), tfi.timesMs.end());
+        uint64_t totalAccesses = std::reduce(tfi.ttAccesses.begin(), tfi.ttAccesses.end());
+
+        std::cout << "Search diagnostic averages" << std::endl;
+        std::cout << "Depth:\t\t" << average(tfi.depths) << std::endl;
+        std::cout << "Nodes:\t\t" << average(tfi.nodes) << std::endl;
+        std::cout << "Q nodes:\t" << average(tfi.qNodes) << std::endl;
+        std::cout << "Time:\t\t" << average(tfi.timesMs) << " ms" << std::endl;
+        if (totalTime != 0)
+        {
+            uint64_t nps = std::reduce(tfi.nodes.begin(), tfi.nodes.end()) / totalTime;
+            std::cout << "NPS:\t\t" << nps << "k" << std::endl;
+        }
+        std::cout << "Cut-offs:\t" << average(tfi.cutOffs) << std::endl;
+        if (totalAccesses != 0)
+        {
+            float ttHitRate = ((float)std::reduce(tfi.ttHits.begin(), tfi.ttHits.end())) / ((float)totalAccesses);
+            std::cout << "TT hit rate:\t" << ttHitRate * 100 << "%" << std::endl;
+        }
+        std::cout << std::endl;
     }
 }

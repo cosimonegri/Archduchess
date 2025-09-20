@@ -7,28 +7,28 @@
   },
   "configurePresets": [
     {
-      "name": "ninja-debug",
-      "displayName": "Ninja Debug Build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceParentDir}/build/debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
       "name": "ninja-release",
       "displayName": "Ninja Release Build",
       "generator": "Ninja",
-      "binaryDir": "${sourceParentDir}/build/release",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "ninja-debug",
+      "displayName": "Ninja Debug Build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "ninja-profile",
       "displayName": "Ninja Profile Build",
       "generator": "Ninja",
-      "binaryDir": "${sourceParentDir}/build/profile",
+      "binaryDir": "${sourceDir}/build/profile",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Profile"
       }
@@ -36,12 +36,12 @@
   ],
   "buildPresets": [
     {
-      "name": "debug",
-      "configurePreset": "ninja-debug"
-    },
-    {
       "name": "release",
       "configurePreset": "ninja-release"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "ninja-debug"
     },
     {
       "name": "profile",

@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-project(ChessEngine)
+cmake_minimum_required(VERSION 3.30)
+project(archduchess)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,7 +16,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(engine)
 
-add_executable(rooster main.cpp)
-target_link_libraries(rooster PRIVATE engine)
+add_executable(archduchess main.cpp)
+target_link_libraries(archduchess PRIVATE engine)
 
 add_subdirectory(tests)

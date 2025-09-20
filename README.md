@@ -1,10 +1,11 @@
 # Archduchess
 
-A UCI chess engine written from scratch in C++. Hosted on GCP and rated ~2050 on Lichess.
+A UCI chess engine written from scratch in C++. Hosted on GCP and rated ~2000 on Lichess.
 
 [Play against Archduchess on Lichess!](https://lichess.org/@/ArchduchessBot)
 
-![Screenshot 2024-09-14 125054](https://github.com/user-attachments/assets/569f1001-8da8-47c1-bf32-8157c68cb3aa)
+<img alt="ArchduchessBotLichess" src="https://github.com/user-attachments/assets/f107574a-72ed-4e5d-96fd-e92bd9e63c04" />
+
 
 ## Features
 
@@ -45,8 +46,6 @@ A UCI chess engine written from scratch in C++. Hosted on GCP and rated ~2050 on
 - 2 Killer Moves
 - History Heuristic
   - Indexed by side to move, start square and end square
-
----
 
 ## Building the Project
 
@@ -95,7 +94,6 @@ This project uses CMake for building.
 
    The main engine executable will be in `build/<build-type>/bin/archduchess.exe`
 
----
 
 ## Future Roadmap
 

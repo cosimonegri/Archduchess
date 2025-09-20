@@ -47,8 +47,6 @@ A UCI chess engine written from scratch in C++. Hosted on GCP and rated ~2000 on
 - History Heuristic
   - Indexed by side to move, start square and end square
 
----
-
 ## Building the Project
 
 This project uses CMake for building.
@@ -96,7 +94,6 @@ This project uses CMake for building.
 
    The main engine executable will be in `build/<build-type>/bin/archduchess.exe`
 
----
 
 ## Future Roadmap
 

@@ -1,0 +1,51 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 30,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "ninja-debug",
+      "displayName": "Ninja Debug Build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceParentDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "ninja-release",
+      "displayName": "Ninja Release Build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceParentDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "ninja-profile",
+      "displayName": "Ninja Profile Build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceParentDir}/build/profile",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Profile"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "ninja-debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "ninja-release"
+    },
+    {
+      "name": "profile",
+      "configurePreset": "ninja-profile"
+    }
+  ]
+}

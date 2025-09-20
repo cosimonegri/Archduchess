@@ -53,12 +53,12 @@ namespace engine
             }
             bool sameFile = others & fileBB(fileOf(move.getFrom()));
             bool sameRank = others & rankBB(rankOf(move.getFrom()));
-            if (!sameFile && sameRank)
-                san += toString(fileOf(move.getFrom()));
-            else if (sameFile && !sameRank)
-                san += toString(rankOf(move.getFrom()));
-            else if (sameFile && sameRank)
+            if (sameFile && sameRank)
                 san += toString(move.getFrom());
+            else if (sameFile)
+                san += toString(rankOf(move.getFrom()));
+            else if (others)
+                san += toString(fileOf(move.getFrom()));
         }
 
         // capture

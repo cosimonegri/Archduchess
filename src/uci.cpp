@@ -32,7 +32,11 @@ namespace engine
             iss >> token;
 
             if (token == "uci")
+            {
+                respond("id name Archduchess v1.0");
+                respond("id author Cosimo Giovanni Negri");
                 respond("uciok");
+            }
 
             else if (token == "isready")
                 respond("readyok");

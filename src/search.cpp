@@ -110,7 +110,7 @@ namespace engine
         }
 
         Eval originalAlpha = alpha;
-        TTEntry *entry = TT.get(pos.getZobristKey());
+        TTEntry *entry = TT.get(pos);
         ttAccesses++;
         if (ply > 0 && entry != NULL && entry->depth >= depth)
         {
@@ -220,7 +220,7 @@ namespace engine
         {
             type = UPPER_BOUND;
         }
-        TT.add(pos.getZobristKey(), depth, type, bestMove, bestEval);
+        TT.add(pos, depth, type, bestMove, bestEval);
 
         if (ply == 0)
         {

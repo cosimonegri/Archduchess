@@ -1,8 +1,8 @@
 #ifndef TRANSPOSITION_H
 #define TRANSPOSITION_H
 
+#include "position.hpp"
 #include "evaluation.hpp"
-#include "zobrist.hpp"
 #include "move.hpp"
 
 namespace engine
@@ -42,8 +42,8 @@ namespace engine
         ~TranspositionTable();
 
         void clear();
-        void add(Key key, Depth depth, NodeType type, Move hashMove, Eval eval);
-        TTEntry *get(Key key);
+        void add(const Position &pos, Depth depth, NodeType type, Move hashMove, Eval eval);
+        TTEntry *get(const Position &pos);
         float getOccupancyRate();
     };
 }

@@ -6,7 +6,6 @@ A UCI chess engine written from scratch in C++. Hosted on GCP and rated ~2000 on
 
 <img alt="ArchduchessBotLichess" src="https://github.com/user-attachments/assets/f107574a-72ed-4e5d-96fd-e92bd9e63c04" />
 
-
 ## Features
 
 #### UCI Interface
@@ -32,11 +31,13 @@ A UCI chess engine written from scratch in C++. Hosted on GCP and rated ~2000 on
 - Negamax
 - Alpha-Beta Pruning
 - Iterative Deepening
+- Aspiration Windows
 - Transposition Table
 - Quiescence Search
   - Delta Pruning
 - Null Move Pruning
-- Check Extensions
+- Check Extension
+- Late Move Reduction
 
 #### Move Ordering
 
@@ -93,7 +94,6 @@ This project uses CMake for building.
 3. **Run the executable:**
 
    The main engine executable will be in `build/<build-type>/bin/archduchess.exe`
-
 
 ## Future Roadmap
 

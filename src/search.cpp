@@ -158,7 +158,7 @@ namespace engine
         }
 
         // standard search ends, go to quiescence search
-        if (depth <= 0)
+        if (depth <= 0 && !pos.isKingInCheck())
         {
             return quiescenceSearch(pos, alpha, beta);
         }
@@ -240,6 +240,8 @@ namespace engine
         Eval bestEval = MIN_EVAL;
         Move bestMove = Move();
 
+        Depth checkExtension = pos.isKingInCheck() ? 1 : 0;
+
         // standard negamax search with alpha-beta pruning
         while (extMoveList.size > 0)
         {
@@ -247,7 +249,7 @@ namespace engine
             Move move = popMoveHighestScore(extMoveList);
 
             pos.makeTurn(move, &state);
-            eval = -search(pos, depth - 1, ply + 1, -beta, -alpha, true);
+            eval = -search(pos, depth - 1 + checkExtension, ply + 1, -beta, -alpha, true);
             pos.unmakeTurn();
 
             if (shouldStop(thinkInfo, 0, nodes, endTime))

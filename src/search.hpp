@@ -14,6 +14,9 @@ namespace engine
 {
     constexpr Depth MAX_DEPTH = 100;
 
+    constexpr Eval WINDOW_DELTA_1 = 25;
+    constexpr Eval WINDOW_DELTA_2 = 100;
+
     constexpr int BASE_SCORE_MULTIPLIER = 1000000;
 
     constexpr int TT_SCORE = 1000 * BASE_SCORE_MULTIPLIER;

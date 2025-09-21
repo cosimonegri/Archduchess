@@ -61,10 +61,48 @@ namespace engine
         clear();
 
         Depth depth = 1;
+        Eval eval = 0;
+        Eval alpha, beta;
         auto begin = std::chrono::steady_clock::now();
+
         while (true)
         {
-            search(pos, depth, 0, MIN_EVAL, MAX_EVAL, false);
+            // perform a full window search for low depths
+            if (depth <= 3)
+            {
+                eval = search(pos, depth, 0, MIN_EVAL, MAX_EVAL, false);
+            }
+            // use aspiration windows for higher depths
+            else
+            {
+                alpha = std::max(Eval(eval - WINDOW_DELTA_1), MIN_EVAL);
+                beta = std::min(Eval(eval + WINDOW_DELTA_1), MAX_EVAL);
+                eval = search(pos, depth, 0, alpha, beta, false);
+
+                // if the result is outside the window, re-search with a wider window
+                // changing only the bound that failed
+                if (eval <= alpha)
+                {
+                    alpha = std::max(Eval(eval - WINDOW_DELTA_2), MIN_EVAL);
+                    eval = search(pos, depth, 0, alpha, beta, false);
+                    // full window search if it fails again
+                    if (eval <= alpha)
+                    {
+                        eval = search(pos, depth, 0, MIN_EVAL, beta, false);
+                    }
+                }
+                if (eval >= beta)
+                {
+                    beta = std::min(Eval(eval + WINDOW_DELTA_2), MAX_EVAL);
+                    eval = search(pos, depth, 0, alpha, beta, false);
+                    // full window search if it fails again
+                    if (eval >= beta)
+                    {
+                        eval = search(pos, depth, 0, alpha, MAX_EVAL, false);
+                    }
+                }
+            }
+
             auto time = getTimeMs(begin, std::chrono::steady_clock::now());
             if (listener != NULL)
             {

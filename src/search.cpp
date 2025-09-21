@@ -157,8 +157,14 @@ namespace engine
             return 0;
         }
 
+        // Extend if under check
+        if (pos.isKingInCheck())
+        {
+            depth++;
+        }
+
         // standard search ends, go to quiescence search
-        if (depth <= 0 && !pos.isKingInCheck())
+        if (depth <= 0)
         {
             return quiescenceSearch(pos, alpha, beta);
         }
@@ -239,17 +245,34 @@ namespace engine
 
         Eval bestEval = MIN_EVAL;
         Move bestMove = Move();
-
-        Depth checkExtension = pos.isKingInCheck() ? 1 : 0;
+        int moveCount = 0;
 
         // standard negamax search with alpha-beta pruning
         while (extMoveList.size > 0)
         {
             // perform move ordering
             Move move = popMoveHighestScore(extMoveList);
+            moveCount++;
 
             pos.makeTurn(move, &state);
-            eval = -search(pos, depth - 1 + checkExtension, ply + 1, -beta, -alpha, true);
+
+            // LMR (late move reduction)
+            if (moveCount > 1 && depth >= 3 && !pos.isKingInCheck() && !move.isCapture() && !move.isPromotion())
+            {
+                Depth reduction = depth > 6 ? 2 : 1;
+                eval = -search(pos, depth - 1 - reduction, ply + 1, -beta, -alpha, true);
+                // perform full search if the reduced search raised alpha
+                if (eval > alpha)
+                {
+                    eval = -search(pos, depth - 1, ply + 1, -beta, -alpha, true);
+                }
+            }
+            else
+            // full search
+            {
+                eval = -search(pos, depth - 1, ply + 1, -beta, -alpha, true);
+            }
+
             pos.unmakeTurn();
 
             if (shouldStop(thinkInfo, 0, nodes, endTime))

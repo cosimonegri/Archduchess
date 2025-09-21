@@ -4,6 +4,12 @@
 
 namespace engine
 {
+    /**
+     * Evaluate a position
+     *
+     * @param pos The position to evaluate
+     * @return Evaluation of the position, positive means advantage for the side to move
+     */
     Eval evaluate(Position &pos)
     {
         Eval eval = 0;

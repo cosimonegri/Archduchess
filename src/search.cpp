@@ -20,6 +20,10 @@ namespace engine
         this->listener = listener;
     }
 
+    /**
+     * Clears the search state, including the transposition table, killer moves,
+     * history heuristic and variables used for search diagnostics.
+     */
     void SearchManager::clear()
     {
         TT.clear();
@@ -89,6 +93,17 @@ namespace engine
         return moveToMake;
     }
 
+    /**
+     * Negamax search with alpha-beta pruning and many optimization techniques.
+     *
+     * @param pos The current position
+     * @param depth Half-moves from the leaf nodes of the standard search
+     * @param ply Half-moves since the root position
+     * @param alpha Represents the best score that the side to move can currently guarantee
+     * @param beta Represents the best score that the opponent can currently guarantee
+     * @param canNull Whether null move is allowed
+     * @return Evaluation of the position, positive means advantage for the side to move
+     */
     Eval SearchManager::search(Position &pos, Depth depth, int ply,
                                Eval alpha, Eval beta, bool canNull)
     {
@@ -97,12 +112,14 @@ namespace engine
             return 0;
         }
 
+        // draw by 50-move rule or repetition
         if (pos.getHalfMove() >= 100 || pos.isRepeated())
         {
             nodes++;
             return 0;
         }
 
+        // standard search ends, go to quiescence search
         if (depth <= 0)
         {
             return quiescenceSearch(pos, alpha, beta);
@@ -111,6 +128,9 @@ namespace engine
         Eval originalAlpha = alpha;
         TTEntry *entry = TT.get(pos);
         ttAccesses++;
+
+        // Use TT entry only if the position has been evaluated at a depth
+        // equal or bigger than the current search depth.
         if (ply > 0 && entry != NULL && entry->depth >= depth)
         {
             ttHits++;
@@ -143,10 +163,13 @@ namespace engine
             nodes++;
             if (pos.isKingInCheck())
             {
+                // side to move is in checkmate
+                // ply is used to prefer faster/slower checkmates
                 return MIN_EVAL + ply;
             }
             else
             {
+                // stalemate
                 return 0;
             }
         }
@@ -179,9 +202,12 @@ namespace engine
         Eval bestEval = MIN_EVAL;
         Move bestMove = Move();
 
+        // standard negamax search with alpha-beta pruning
         while (extMoveList.size > 0)
         {
+            // perform move ordering
             Move move = popMoveHighestScore(extMoveList);
+
             pos.makeTurn(move, &state);
             eval = -search(pos, depth - 1, ply + 1, -beta, -alpha, true);
             pos.unmakeTurn();
@@ -196,11 +222,13 @@ namespace engine
                 bestEval = eval;
                 bestMove = move;
             }
-
             alpha = std::max(alpha, eval);
+
+            // beta-cutoff
             if (alpha >= beta)
             {
                 cutOffs++;
+                // store killer move and update history heuristic for quite moves
                 if (!move.isCapture() && !move.isPromotion())
                 {
                     killers[ply].add(move);
@@ -213,14 +241,19 @@ namespace engine
         NodeType type = EXACT;
         if (bestEval >= beta)
         {
+            // If a beta-cutoff has occurred, the evaluation is a lower bound.
+            // (the exact score might be higher)
             type = LOWER_BOUND;
         }
         else if (bestEval <= originalAlpha)
         {
+            // If no move has raised alpha, the evaluation is an upper bound.
+            // (the exact score might be lower)
             type = UPPER_BOUND;
         }
         TT.add(pos, depth, type, bestMove, bestEval);
 
+        // update the move to make if we are at the root node
         if (ply == 0)
         {
             moveToMake = bestMove;
@@ -228,6 +261,16 @@ namespace engine
         return bestEval;
     }
 
+    // TODO add concept of checkmate or stalemate?
+    /**
+     * Quiescence search to avoid horizon effect by evaluating only "quiet" positions.
+     * Only capture moves are considered.
+     *
+     * @param pos The current position
+     * @param alpha Represents the best score that the side to move can currently guarantee
+     * @param beta Represents the best score that the opponent can currently guarantee
+     * @return Evaluation of the position, positive means advantage for the side to move
+     */
     Eval SearchManager::quiescenceSearch(Position &pos, Eval alpha, Eval beta)
     {
         if (shouldStop(thinkInfo, 0, nodes, endTime))
@@ -255,6 +298,7 @@ namespace engine
         RevertState state;
         while (extMoveList.size > 0)
         {
+            // perform move ordering
             Move move = popMoveHighestScore(extMoveList);
 
             // todo don't do delta pruning in endgame

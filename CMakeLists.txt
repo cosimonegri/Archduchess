@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(Threads REQUIRED)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 
@@ -23,7 +25,7 @@ target_include_directories(engine PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 # --- Crate main archduchess executable ---
 add_executable(archduchess src/main.cpp)
-target_link_libraries(archduchess PRIVATE engine)
+target_link_libraries(archduchess PRIVATE engine Threads::Threads)
 
 target_compile_options(archduchess PRIVATE
     $<$<CONFIG:Debug>:-O0 -g -Wall>

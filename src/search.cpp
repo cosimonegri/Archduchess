@@ -23,11 +23,10 @@ namespace engine
     void SearchManager::clear()
     {
         TT.clear();
+
         for (size_t i = 0; i < std::size(killers); i++)
-        {
-            killers[i].add(Move());
-            killers[i].add(Move());
-        }
+            killers[i].clear();
+
         for (Color color : {WHITE, BLACK})
             for (Tile from = A1; from <= H8; ++from)
                 for (Tile to = A1; to <= H8; ++to)
@@ -202,7 +201,7 @@ namespace engine
             if (alpha >= beta)
             {
                 cutOffs++;
-                if (!move.isCapture())
+                if (!move.isCapture() && !move.isPromotion())
                 {
                     killers[ply].add(move);
                     history[pos.getTurn()][move.getFrom()][move.getTo()] += depth * depth;
@@ -304,7 +303,7 @@ namespace engine
         {
             score += PROM_SCORE;
         }
-        score += MVV_LVA[typeOf(captured)][typeOf(piece)];
+        score += MVV_LVA[typeOf(captured)][typeOf(piece)] * MVV_LVA_SCORE_MULTIPLIER;
         if (captured == NULL_PIECE)
         {
             if (k != NULL && k->matchA(move))

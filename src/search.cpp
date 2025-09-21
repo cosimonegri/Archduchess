@@ -284,7 +284,7 @@ namespace engine
             nodes++;
             qNodes++;
             cutOffs++;
-            return beta;
+            return standPat;
         }
         alpha = std::max(alpha, standPat);
 
@@ -320,7 +320,7 @@ namespace engine
             if (eval >= beta)
             {
                 cutOffs++;
-                return beta;
+                return eval;
             }
             alpha = std::max(alpha, eval);
         }

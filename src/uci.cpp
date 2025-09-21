@@ -195,7 +195,7 @@ namespace engine
 
     void UCIEngine::onReceiveInfo(Depth depth, uint64_t nodes, uint64_t timeMs, float ttOccupancy)
     {
-        timeMs = std::max(1ull, timeMs);
+        timeMs = std::max((uint64_t)1, timeMs);
         uint64_t nps = nodes / timeMs * 1000;
         int hashfull = ttOccupancy * 1000;
         respond(std::vformat("info depth {} nodes {} nps {} hashfull {} time {} ",

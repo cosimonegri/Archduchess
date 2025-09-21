@@ -18,7 +18,7 @@ namespace engine
         if (info.flags & F_TIME)
             thinkTimeMs += info.time[side] / movesToGo;
         if (info.flags & F_INC)
-            thinkTimeMs += info.increment[side];
+            thinkTimeMs += info.increment[side] * 0.95;
 
         return thinkTimeMs;
     }

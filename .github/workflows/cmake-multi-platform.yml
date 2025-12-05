@@ -28,7 +28,7 @@ jobs:
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
     - name: Configure
-      run: cmake --preset ninja-${{ matrix.preset }} -DCMAKE_CXX_COMPILER==${{ matrix.cpp_compiler }}
+      run: cmake --preset ninja-${{ matrix.preset }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
 
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
     - name: Build
@@ -37,4 +37,4 @@ jobs:
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
     - name: Test
-      run: ctest --test-dir build/release
+      run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure

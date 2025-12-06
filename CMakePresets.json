@@ -47,5 +47,19 @@
       "name": "profile",
       "configurePreset": "ninja-profile"
     }
+  ],
+  "testPresets": [
+    {
+      "name": "release",
+      "configurePreset": "ninja-release"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "ninja-debug"
+    },
+    {
+      "name": "profile",
+      "configurePreset": "ninja-profile"
+    }
   ]
 }

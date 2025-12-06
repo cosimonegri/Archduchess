@@ -11,7 +11,9 @@
 #include "zobrist.hpp"
 #include "bitboard.hpp"
 
-std::string TESTSUITES_FOLDER = "testsuites/";
+#ifndef TEST_SUITE_DIR
+#define TEST_SUITE_DIR "./testsuites"
+#endif
 
 uint64_t average(std::vector<uint64_t> const &v)
 {
@@ -127,7 +129,7 @@ TEST_CASE("MoveTest", "[engine]")
     std::string bestMoves;
     size_t fenLength;
 
-    for (const auto &entry : std::filesystem::directory_iterator(TESTSUITES_FOLDER))
+    for (const auto &entry : std::filesystem::directory_iterator(TEST_SUITE_DIR))
     {
         if (!entry.is_regular_file())
             continue;

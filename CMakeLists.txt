@@ -35,4 +35,5 @@ target_compile_options(archduchess PRIVATE
 # -----------------------------------------
 
 
+enable_testing()
 add_subdirectory(tests)
